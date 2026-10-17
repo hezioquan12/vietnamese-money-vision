@@ -77,17 +77,17 @@ The production model [`android/app/src/main/assets/models/yolo26_money_quant.tfl
   - Channels `0..3`: Bounding box center and dimensions (`cx, cy, w, h`).
   - Channels `4..12`: Class scores for the **9 Vietnamese banknote denominations** ordered alphabetically by label string (`YOLO_CLASS_ORDER`):
 
-| Class Index (`classIndex`) | Tensor Channel (`channel`) | Label String (`YOLO_CLASS_ORDER`) | Numeric Value (`MoneyClass`) | Vietnamese Spoken Phrase |
+| Class Index (`classIndex`) | Tensor Channel (`channel`) | Label String (`YOLO_CLASS_ORDER`) | Numeric Value (`MoneyClass`) | Denomination & Spoken Phrase |
 | :---: | :---: | :---: | :---: | :--- |
-| `0` | `4` | `"1000"` | `1000` | Một nghìn đồng (`1,000₫`) |
-| `1` | `5` | `"10000"` | `10000` | Mười nghìn đồng (`10,000₫`) |
-| `2` | `6` | `"100000"` | `100000` | Một trăm nghìn đồng (`100,000₫`) |
-| `3` | `7` | `"2000"` | `2000` | Hai nghìn đồng (`2,000₫`) |
-| `4` | `8` | `"20000"` | `20000` | Hai mươi nghìn đồng (`20,000₫`) |
-| `5` | `9` | `"200000"` | `200000` | Hai trăm nghìn đồng (`200,000₫`) |
-| `6` | `10` | `"5000"` | `5000` | Năm nghìn đồng (`5,000₫`) |
-| `7` | `11` | `"50000"` | `50000` | Năm mươi nghìn đồng (`50,000₫`) |
-| `8` | `12` | `"500000"` | `500000` | Năm trăm nghìn đồng (`500,000₫`) |
+| `0` | `4` | `"1000"` | `1000` | One thousand Dong (`1,000₫` / *"Một nghìn đồng"*) |
+| `1` | `5` | `"10000"` | `10000` | Ten thousand Dong (`10,000₫` / *"Mười nghìn đồng"*) |
+| `2` | `6` | `"100000"` | `100000` | One hundred thousand Dong (`100,000₫` / *"Một trăm nghìn đồng"*) |
+| `3` | `7` | `"2000"` | `2000` | Two thousand Dong (`2,000₫` / *"Hai nghìn đồng"*) |
+| `4` | `8` | `"20000"` | `20000` | Twenty thousand Dong (`20,000₫` / *"Hai mươi nghìn đồng"*) |
+| `5` | `9` | `"200000"` | `200000` | Two hundred thousand Dong (`200,000₫` / *"Hai trăm nghìn đồng"*) |
+| `6` | `10` | `"5000"` | `5000` | Five thousand Dong (`5,000₫` / *"Năm nghìn đồng"*) |
+| `7` | `11` | `"50000"` | `50000` | Fifty thousand Dong (`50,000₫` / *"Năm mươi nghìn đồng"*) |
+| `8` | `12` | `"500000"` | `500000` | Five hundred thousand Dong (`500,000₫` / *"Năm trăm nghìn đồng"*) |
 
 ### 2.2. $16 \times 16$ Cache-Tiled 90° CW YUV420-to-NCHW Preprocessing
 
@@ -389,7 +389,7 @@ flowchart TD
 ### 6.3. Three Core Audio Protection Mechanisms
 
 1. **Wallet Readout Protection Lock (`isReadingWallet`)**:
-   - When a blind user performs a 1-second `Long Press` (`handleLongPress`) or taps the **`[VÍ TÍCH LŨY]`** card to hear their accumulated wallet total, their natural reflex is to **lower the hand holding the banknotes** while listening.
+   - When a blind user performs a 1-second `Long Press` (`handleLongPress`) or taps the **`[ACCUMULATED WALLET]`** (`[VÍ TÍCH LŨY]`) card to hear their accumulated wallet total, their natural reflex is to **lower the hand holding the banknotes** while listening.
    - Lowering the hand causes the camera to emit `EMPTY` after 3 frames (`~390ms`). Because `isReadingWallet = true` is held across the entire wallet playback sequence (`try / finally` in TypeScript and `CompletionCallback` in `MoneyAudioModule.playSequence` in `MainActivity.java`), camera updates only synchronize background state variables and **never call `stop()` or play `empty.wav`**, ensuring the wallet summary finishes uninterrupted.
 2. **Immediate Multi-Note Upgrade Preemption (`Multi-Note Upgrade Preemption`)**:
    - When holding two `50,000₫` notes, if Note #1 converges first (`t = 0.5s`) and begins speaking *"Năm mươi nghìn"*, and `200ms` later Note #2 converges (`newTotalNotes = 2 > currentlyAnnouncingNotesCount = 1`), the controller **immediately aborts the partial 1-note utterance** and speaks *"Hai tờ năm mươi nghìn"*. This prevents the user from hearing two separate consecutive announcements (*"Năm mươi nghìn"* followed by *"Hai tờ năm mươi nghìn"*), which would otherwise sound like 3 notes (`150,000₫`).
