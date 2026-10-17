@@ -57,10 +57,18 @@ desktop.ini
 *.log
 .system_generated/
 
-# Release Binaries & Distribution Archives
-# Large compiled binaries (>9MB) should be published via GitHub Releases rather than polluting git source tree.
-release/*.apk
-release/*.idsig
-release/*.sha256
-release/*.zip
-packages/*.zip
+# Release Binaries & Distribution Archives (Publish via GitHub Releases)
+release/
+*.apk
+*.aab
+*.idsig
+
+# Skills & AI Agent Packages (Installed globally on machine, not in app repo)
+.agents/
+packages/
+skills-lock.json
+
+# Internal Development Workflows, Testing Engine & Sprint Notes
+scripts/
+workflows/
+NOTES.md

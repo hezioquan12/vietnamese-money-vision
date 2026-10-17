@@ -124,8 +124,6 @@ App_android/
 │   ├── BLIND_FIRST_UI_UX_SPECIFICATION.en.md # Đặc tả UI/UX trợ năng (English)
 │   ├── SYSTEM_ARCHITECTURE_AND_DESIGN.md   # Phân tích kỹ thuật hệ thống (Tiếng Việt)
 │   └── SYSTEM_ARCHITECTURE_AND_DESIGN.en.md # Phân tích kỹ thuật hệ thống (English)
-├── packages/
-│   └── antigravity-skills-pack/            # Gói độc lập 51 kỹ năng Antigravity (kèm install.ps1 & install.sh)
 ├── src/                                    # TẦNG TYPESCRIPT / REACT NATIVE
 │   ├── constants/                          # Hằng số bản quyền tác giả và bảng màu WCAG AAA
 │   ├── types/                              # Định nghĩa kiểu dữ liệu TypeScript
@@ -145,49 +143,46 @@ App_android/
 │           ├── assets/models/              # yolo26_money_quant.tflite (Mô hình INT8 2.75 MB)
 │           ├── res/raw/                    # 24 file âm thanh tiếng Việt chuẩn (.mp3) và âm hiệu (.wav)
 │           └── java/com/nckh/moneyvision/  # MainActivity, MoneyAudioModule, MoneyCameraView, Yolo26Detector
-├── scripts/                                # BỘ KIỂM THỬ VÀ ĐÓNG GÓI ĐỘC LẬP
-│   ├── test-runner.mjs                     # Bộ chạy 222 bài kiểm thử tự động trên 21 Suites
-│   ├── verify-apk-package.mjs              # Script kiểm định 10 tiêu chí an ninh và bản quyền APK
-│   ├── build-release-apk.mjs               # Script biên dịch và đóng gói Universal Release APK
-│   └── android-sdk-builder.mjs             # Trình biên dịch Android SDK trực tiếp (javac, d8, aapt2, apksigner)
-└── release/
-    └── com.nckh.moneyvision-v1.0.0-universal-release.apk  # Gói cài đặt Universal APK chính thức (9.10 MB)
+└── release/                                # Tệp nhị phân phát hành (Tải tại mục GitHub Releases)
 ```
 
 ---
 
-## 5. Hướng Dẫn Kiểm Thử & Đóng Gói Ứng Dụng
+## 5. Hướng Dẫn Cài Đặt & Biên Dịch Ứng Dụng
 
-Hệ thống kiểm thử và đóng gói được xây dựng bằng **Node.js Built-in Test Runner** không cần phụ thuộc thư viện bên ngoài.
+Ứng dụng được xây dựng theo chuẩn React Native và Gradle Native Android.
 
-### 5.1. Chạy Toàn Bộ 21 Bộ Kiểm Thử Tự Động (222/222 Tests)
-
-Kiểm tra toàn diện từ định dạng tiền tệ, độ tương phản WCAG AAA, máy trạng thái cử chỉ và lọc tì lòng bàn tay 16dp, hàng đợi âm thanh ngắt nâng cấp đa tờ, đèn Flash 4 lớp chống chớp tắt, bộ điều tốc nhiệt/pin 3 tầng, giải mã thưa tensor YOLO26n INT8, bộ lọc 5-frame consensus và bộ đối soát Ví đến kiểm tra cấu trúc mã máy bytecode `classes.dex`:
+### 5.1. Cài Đặt Gói Phụ Thuộc (Dependencies)
 
 ```bash
-node scripts/test-runner.mjs
+npm install
 ```
 
-Kết quả mong đợi: `222 tests, 0 failures (100% Pass)`.
+### 5.2. Chạy Ứng Dụng Ở Chế Độ Phát Triển (Development)
 
-### 5.2. Chạy Kiểm Định 10 Tiêu Chí An Ninh, Tương Thích & Bản Quyền APK
+Khởi chạy Metro bundler:
+```bash
+npm start
+```
 
-Xác thực kiến trúc Zero-Network (`INTERNET = 0`), khóa ký số RSA 4096-bit, Dual-ABI (`armeabi-v7a` + `arm64-v8a`), `minSdkVersion = 28` / `targetSdkVersion = 34`, chữ ký số `v1 + v2 + v3`, 24 tệp âm thanh thực tế, model `yolo26_money_quant.tflite` (`TFL3`) và thông tin bản quyền Nguyễn Quang Toàn:
+Chạy trên thiết bị hoặc máy ảo Android:
+```bash
+npx react-native run-android
+```
+
+### 5.3. Biên Dịch Bản Phát Hành Universal APK (Release Build)
+
+Biên dịch gói APK Universal hoàn chỉnh (hỗ trợ cả 32-bit `armeabi-v7a` và 64-bit `arm64-v8a` kèm chữ ký số v1+v2+v3):
 
 ```bash
-node scripts/verify-apk-package.mjs
+cd android
+./gradlew assembleRelease
 ```
 
-### 5.3. Biên Dịch & Đóng Gói Bản Phát Hành Universal APK
+Tệp APK đầu ra sẽ được tạo tại:
+`android/app/build/outputs/apk/release/app-release.apk`
 
-Biên dịch lại toàn bộ mã nguồn Native, tài nguyên âm thanh, mô hình `.tflite`, căn chỉnh bộ nhớ `zipalign` (4096-byte cho thư viện `.so` và 4-byte cho tài nguyên) và ký số bằng `android/app/release.keystore`:
-
-```bash
-node scripts/build-release-apk.mjs
-```
-
-Tệp APK đầu ra được lưu tại:
-- `release/com.nckh.moneyvision-v1.0.0-universal-release.apk` (Dung lượng: 9.10 MB — hỗ trợ cài đặt trên mọi thiết bị Android từ phiên bản 9.0 Pie đến 14+).
+*(Bạn cũng có thể tải trực tiếp gói cài đặt Universal APK chính thức tại mục **Releases** của kho chứa GitHub).*
 
 ---
 

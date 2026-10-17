@@ -124,8 +124,6 @@ App_android/
 │   ├── BLIND_FIRST_UI_UX_SPECIFICATION.en.md # Accessibility UI/UX specification (English)
 │   ├── SYSTEM_ARCHITECTURE_AND_DESIGN.md   # Deep architecture engineering guide (Tiếng Việt)
 │   └── SYSTEM_ARCHITECTURE_AND_DESIGN.en.md # Deep architecture engineering guide (English)
-├── packages/
-│   └── antigravity-skills-pack/            # Standalone package of 51 Antigravity skills (install.ps1 & install.sh)
 ├── src/                                    # TYPESCRIPT / REACT NATIVE LAYER
 │   ├── constants/                          # Author metadata constants & WCAG AAA color palette
 │   ├── types/                              # Core TypeScript interfaces & type definitions
@@ -145,49 +143,46 @@ App_android/
 │           ├── assets/models/              # yolo26_money_quant.tflite (2.75 MB INT8 model)
 │           ├── res/raw/                    # 24 pre-recorded voice clips (.mp3) and earcons (.wav)
 │           └── java/com/nckh/moneyvision/  # MainActivity, MoneyAudioModule, MoneyCameraView, Yolo26Detector
-├── scripts/                                # ZERO-DEPENDENCY AUTOMATED TEST & BUILD ENGINE
-│   ├── test-runner.mjs                     # Automated runner for 222 tests across 21 test suites
-│   ├── verify-apk-package.mjs              # Security & package integrity verification (10/10 criteria)
-│   ├── build-release-apk.mjs               # Universal Release APK build script (zipalign 4096B/4B + SHA-256)
-│   └── android-sdk-builder.mjs             # Direct Android SDK compiler (javac, d8, aapt2, apksigner)
-└── release/
-    └── com.nckh.moneyvision-v1.0.0-universal-release.apk  # Official Universal Release APK (9.10 MB)
+└── release/                                # Release binaries (Download from GitHub Releases)
 ```
 
 ---
 
-## 5. Testing & Build Instructions
+## 5. Installation & Build Instructions
 
-The verification and packaging pipelines are built on the **Node.js Built-in Test Runner** without requiring third-party testing frameworks.
+The application conforms to standard React Native and Native Android Gradle conventions.
 
-### 5.1. Running the Automated Test Suite (222/222 Tests)
-
-Verifies currency formatters, WCAG AAA contrast ratios, multi-touch gesture state machines, 16dp edge palm rejection, audio preemption queues, 4-layer anti-strobe flashlight guards, 3-tier power governors, INT8 YOLO tensor decoding, 5-frame consensus debouncers, presentation-peak wallet accumulation, and `classes.dex` bytecode symbols:
+### 5.1. Installing Dependencies
 
 ```bash
-node scripts/test-runner.mjs
+npm install
 ```
 
-Expected result: `222 tests, 0 failures (100% Pass)`.
+### 5.2. Running in Development Mode
 
-### 5.2. Running Security, Compatibility & Author Attribution Verification
-
-Validates the Zero-Network architecture (`INTERNET = 0`), RSA 4096-bit signing key, Dual-ABI binaries (`armeabi-v7a` + `arm64-v8a`), `minSdkVersion = 28` / `targetSdkVersion = 34`, `v1 + v2 + v3` digital signatures, 24 verified audio assets, `yolo26_money_quant.tflite` model integrity (`TFL3`), and Nguyễn Quang Toàn author metadata:
-
+Start the Metro bundler:
 ```bash
-node scripts/verify-apk-package.mjs
+npm start
+```
+
+Run on an Android device or emulator:
+```bash
+npx react-native run-android
 ```
 
 ### 5.3. Building the Universal Release APK
 
-Compiles native code, packages audio assets, embeds the `.tflite` model, enforces `zipalign` boundaries (4096-byte alignment for native `.so` files and 4-byte alignment for resources), and signs the package using `android/app/release.keystore`:
+Compile the production Universal APK (supporting both 32-bit `armeabi-v7a` and 64-bit `arm64-v8a` with v1+v2+v3 signatures):
 
 ```bash
-node scripts/build-release-apk.mjs
+cd android
+./gradlew assembleRelease
 ```
 
-Output APK location:
-- `release/com.nckh.moneyvision-v1.0.0-universal-release.apk` (Size: 9.10 MB — installs cleanly on all Android devices from version 9.0 Pie through 14+).
+The compiled APK will be generated at:
+`android/app/build/outputs/apk/release/app-release.apk`
+
+*(The official pre-built Universal Release APK is also available in the repository **Releases** tab on GitHub).*
 
 ---
 
