@@ -1,0 +1,33 @@
+{
+  "name": "MoneyVision",
+  "displayName": "MoneyVision",
+  "version": "1.0.0",
+  "author": "Nguyễn Quang Toàn - Chủ sở hữu & Phát triển độc lập",
+  "copyright": "© 2026 Nguyễn Quang Toàn - Sở hữu & Phát triển độc lập",
+  "description": "Ứng dụng AI trợ năng nhận diện tiền Việt Nam Đồng 100% Offline (YOLO26 TFLite) - Tác giả & Sở hữu độc lập: Nguyễn Quang Toàn",
+  "private": true,
+  "scripts": {
+    "android": "react-native run-android",
+    "ios": "react-native run-ios",
+    "start": "react-native start",
+    "test": "jest",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-native": "0.76.5"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@babel/preset-env": "^7.25.3",
+    "@babel/runtime": "^7.25.0",
+    "@react-native/babel-preset": "0.76.5",
+    "@react-native/metro-config": "0.76.5",
+    "@react-native/typescript-config": "0.76.5",
+    "@types/react": "^18.3.12",
+    "typescript": "5.0.4"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

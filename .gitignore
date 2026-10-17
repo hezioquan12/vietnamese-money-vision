@@ -1,0 +1,66 @@
+# ==============================================================================
+# MoneyVision - Production Git Ignore Configuration
+# ==============================================================================
+
+# Node.js & Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# React Native & Metro Bundler
+.metro/
+metro.cache/
+.expo/
+.bundle/
+
+# Android Build Outputs & Caches
+android/.gradle/
+android/build/
+android/app/build/
+android/captures/
+android/app/captures/
+
+# Local Machine SDK & Environment Configuration
+android/local.properties
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE & Editor Configurations
+.idea/
+android/.idea/
+*.iml
+android/*.iml
+android/app/*.iml
+.vscode/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Scratch Directories, Temporary Logs & Agent Transcripts
+.scratch/
+*.log
+.system_generated/
+
+# Release Binaries & Distribution Archives
+# Large compiled binaries (>9MB) should be published via GitHub Releases rather than polluting git source tree.
+release/*.apk
+release/*.idsig
+release/*.sha256
+release/*.zip
+packages/*.zip

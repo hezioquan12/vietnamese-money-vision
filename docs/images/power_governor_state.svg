@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 850 400" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgP" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0c1017"/>
+      <stop offset="100%" stop-color="#141c2b"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="850" height="400" rx="12" fill="url(#bgP)"/>
+
+  <!-- Title -->
+  <text x="425" y="40" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="18" font-weight="700" fill="#ffffff" text-anchor="middle">
+    3-TIER ADAPTIVE THERMAL &amp; POWER GOVERNOR
+  </text>
+  <text x="425" y="62" font-family="monospace" font-size="12" fill="#7d8ea6" text-anchor="middle">
+    State Transition Machine: BURST (130ms) ↔ ECO (650ms) ↔ HIBERNATION (1500-3000ms)
+  </text>
+
+  <!-- State 1: BURST -->
+  <rect x="50" y="110" width="210" height="180" rx="10" fill="#1e1818" stroke="#ff7675" stroke-width="2"/>
+  <rect x="50" y="110" width="210" height="36" rx="10" fill="#ff7675"/>
+  <text x="155" y="134" font-family="-apple-system, sans-serif" font-size="14" font-weight="800" fill="#ffffff" text-anchor="middle">BURST MODE</text>
+  <text x="155" y="170" font-family="monospace" font-size="13" font-weight="700" fill="#FFE600" text-anchor="middle">Interval: 130ms (~7.7 FPS)</text>
+  <text x="155" y="195" font-family="-apple-system, sans-serif" font-size="11" fill="#dfe6e9" text-anchor="middle">Trigger: Khi có tiền / Chạm /</text>
+  <text x="155" y="212" font-family="-apple-system, sans-serif" font-size="11" fill="#dfe6e9" text-anchor="middle">Chuyển động ΔY ≥ 4.5 hoặc</text>
+  <text x="155" y="229" font-family="-apple-system, sans-serif" font-size="11" fill="#dfe6e9" text-anchor="middle">Gia tốc IMU Δa ≥ 0.35m/s²</text>
+  <text x="155" y="260" font-family="monospace" font-size="10" fill="#ff7675" text-anchor="middle">Preview Alpha: 1.0 (Full)</text>
+
+  <!-- Arrow BURST -> ECO -->
+  <path d="M 260 170 L 320 170" stroke="#FFE600" stroke-width="2" fill="none"/>
+  <polygon points="318,165 328,170 318,175" fill="#FFE600"/>
+  <text x="290" y="158" font-family="monospace" font-size="10" fill="#FFE600" text-anchor="middle">3.0s Tĩnh</text>
+
+  <!-- Arrow ECO -> BURST -->
+  <path d="M 320 220 L 260 220" stroke="#ff7675" stroke-width="2" fill="none"/>
+  <polygon points="262,215 252,220 262,225" fill="#ff7675"/>
+  <text x="290" y="240" font-family="monospace" font-size="10" fill="#ff7675" text-anchor="middle">Motion Wake</text>
+
+  <!-- State 2: ECO -->
+  <rect x="320" y="110" width="210" height="180" rx="10" fill="#13241f" stroke="#55efc4" stroke-width="2"/>
+  <rect x="320" y="110" width="210" height="36" rx="10" fill="#00b894"/>
+  <text x="425" y="134" font-family="-apple-system, sans-serif" font-size="14" font-weight="800" fill="#ffffff" text-anchor="middle">ECO MODE</text>
+  <text x="425" y="170" font-family="monospace" font-size="13" font-weight="700" fill="#FFE600" text-anchor="middle">Interval: 650ms (~1.5 FPS)</text>
+  <text x="425" y="195" font-family="-apple-system, sans-serif" font-size="11" fill="#dfe6e9" text-anchor="middle">Tiết kiệm 80% pin &amp; nhiệt</text>
+  <text x="425" y="212" font-family="-apple-system, sans-serif" font-size="11" fill="#dfe6e9" text-anchor="middle">Khóa giữ tiền ổn định</text>
+  <text x="425" y="229" font-family="-apple-system, sans-serif" font-size="11" fill="#dfe6e9" text-anchor="middle">350ms Deadband Hysteresis</text>
+  <text x="425" y="260" font-family="monospace" font-size="10" fill="#55efc4" text-anchor="middle">Preview Alpha: 0.35</text>
+
+  <!-- Arrow ECO -> HIBERNATION -->
+  <path d="M 530 170 L 590 170" stroke="#FFE600" stroke-width="2" fill="none"/>
+  <polygon points="588,165 598,170 588,175" fill="#FFE600"/>
+  <text x="560" y="158" font-family="monospace" font-size="10" fill="#FFE600" text-anchor="middle">12.0s Tĩnh</text>
+
+  <!-- Arrow HIBERNATION -> BURST -->
+  <path d="M 590 250 Q 425 330 260 250" stroke="#74b9ff" stroke-width="2" fill="none"/>
+  <polygon points="265,243 253,248 261,255" fill="#74b9ff"/>
+  <text x="425" y="325" font-family="monospace" font-size="11" fill="#74b9ff" text-anchor="middle">Bất kỳ Chạm màn hình / Rút túi / Cầm di chuyển (Wake-up Fusion)</text>
+
+  <!-- State 3: HIBERNATION -->
+  <rect x="590" y="110" width="210" height="180" rx="10" fill="#141c2c" stroke="#74b9ff" stroke-width="2"/>
+  <rect x="590" y="110" width="210" height="36" rx="10" fill="#0984e3"/>
+  <text x="695" y="134" font-family="-apple-system, sans-serif" font-size="14" font-weight="800" fill="#ffffff" text-anchor="middle">HIBERNATION MODE</text>
+  <text x="695" y="170" font-family="monospace" font-size="13" font-weight="700" fill="#FFE600" text-anchor="middle">Interval: 1500ms - 3000ms</text>
+  <text x="695" y="195" font-family="-apple-system, sans-serif" font-size="11" fill="#dfe6e9" text-anchor="middle">stopRepeating() Camera2 ISP</text>
+  <text x="695" y="212" font-family="-apple-system, sans-serif" font-size="11" fill="#dfe6e9" text-anchor="middle">Tắt luồng AI suy luận</text>
+  <text x="695" y="229" font-family="-apple-system, sans-serif" font-size="11" fill="#dfe6e9" text-anchor="middle">Keep-Screen-On 180s Cutoff</text>
+  <text x="695" y="260" font-family="monospace" font-size="10" fill="#74b9ff" text-anchor="middle">Preview Alpha: 0.05</text>
+
+  <!-- Bottom Spec Bar -->
+  <rect x="50" y="350" width="750" height="32" rx="6" fill="#1e293b"/>
+  <text x="425" y="371" font-family="monospace" font-size="11" fill="#94a3b8" text-anchor="middle">
+    Multi-Sensor Wake-Up Fusion: Luma Grid (ΔY ≥ 4.5) | IMU (Δa ≥ 0.35 - 0.65 m/s²) | Proximity Uncover | Touch
+  </text>
+</svg>

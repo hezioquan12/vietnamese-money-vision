@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">MoneyVision</string>
+    <string name="app_author">Nguyễn Quang Toàn - Chủ sở hữu &amp; Phát triển độc lập</string>
+    <string name="app_author_banner">Tác giả &amp; Sở hữu độc lập: Nguyễn Quang Toàn</string>
+    <string name="app_copyright">© 2026 Nguyễn Quang Toàn - Sở hữu &amp; Phát triển độc lập</string>
+    <string name="app_technical_info">Ứng dụng AI trợ năng nhận diện tiền Việt Nam Đồng 100% Offline (YOLO26 TFLite).</string>
+</resources>
