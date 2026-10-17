@@ -1,6 +1,6 @@
 # Đặc Tả Thiết Kế Giao Diện & Trải Nghiệm Trợ Năng (Blind-First UI/UX & TalkBack Specification)
 
-> 🌐 **Ngôn ngữ / Language:** **🇻🇳 Tiếng Việt (Hiện tại)** | [🇬🇧 English (`BLIND_FIRST_UI_UX_SPECIFICATION.en.md`)](file:///c:/Users/ADMIN/NCKH/App_android/docs/BLIND_FIRST_UI_UX_SPECIFICATION.en.md)
+> **Ngôn ngữ / Language:** **Tiếng Việt (Hiện tại)** | [English (`BLIND_FIRST_UI_UX_SPECIFICATION.en.md`)](BLIND_FIRST_UI_UX_SPECIFICATION.en.md)
 >
 > **Dự án:** **MoneyVision** (`com.nckh.moneyvision`)  
 > **Tác giả & Chủ sở hữu độc lập:** **Nguyễn Quang Toàn** (`© 2026 Nguyễn Quang Toàn - Sở hữu & Phát triển độc lập`)  
@@ -28,8 +28,8 @@ flowchart TD
         L1["Lớp 1 (Đáy - z=0): CameraViewport (TextureView / PreviewView)\n• importantForAccessibility = 'no-hide-descendants'\n• Độ mờ động theo PowerState:\n  - BURST: alpha = 0.22 (Giảm chói mắt)\n  - ECO: alpha = 0.08 (Tiết kiệm GPU blending)\n  - HIBERNATION: alpha = 0.00 (True OLED Black 0mW)"]
         L2["Lớp 2 (z=1): EdgePulseBorder (Khung Viền Nhịp Thở 8dp #FFE600)\n• pointerEvents = 'none'\n• BURST + Có tiền: Dao động 0.35 <-> 1.0 (chu kỳ 1200ms)\n• ECO + Có tiền: Giữ tĩnh opacity = 0.85 (0% CPU Animation)\n• HIBERNATION / Không có tiền: opacity = 0.0"]
         L3["Lớp 3 (z=2): Bề Mặt Cử Chỉ Toàn Màn Hình (GestureCanvas / rootPulseContainer)\n• Bắt cử chỉ 1 Chạm, 2 Chạm, Giữ 1s, 2 Ngón x2\n• Lọc điểm tì lòng bàn tay 16dp sát mép màn hình (Per-Pointer)\n• Gắn View.AccessibilityDelegate & View.OnHoverListener cho TalkBack"]
-        L4["Lớp 4 (z=3): Low-Vision HUD & Các Nút Trợ Năng Trực Tiếp (TactileDisplay)\n• Thanh Header: Bản quyền Nguyễn Quang Toàn | 🛠️ Kiểm thử | ℹ️ Tác giả\n• Thanh Trạng thái: Huy hiệu Năng lượng (🔍/🌿/💤) | Nút 🔦 ĐÈN (>= 44dp)\n• Khung Ngắm Định Tâm 4 Góc Chữ L (Viewfinder Reticle)\n• Chữ Hero 64sp Monospace + Huy hiệu Màu Tiền Polymer/Cotton\n• Thẻ 👛 VÍ TÍCH LŨY (>= 44dp) & Nút 🔄 XÓA VÍ (>= 44dp)"]
-        L5["Lớp 5 (Đỉnh - z=4): Ngăn Kéo Kiểm Thử (SimulationControls) & AuthorModal\n• SimulationControls mặc định ẨN HOÀN TOÀN (isOpen = false / View.GONE)\n• Chỉ mở khi nhà phát triển bấm nút 🛠️ Kiểm thử"]
+        L4["Lớp 4 (z=3): Low-Vision HUD & Các Nút Trợ Năng Trực Tiếp (TactileDisplay)\n• Thanh Header: Bản quyền Nguyễn Quang Toàn | [KIỂM THỬ] | [TÁC GIẢ]\n• Thanh Trạng thái: Huy hiệu Năng lượng (ĐANG QUÉT/ECO/CHỜ) | Nút [ĐÈN PIN] (>= 44dp)\n• Khung Ngắm Định Tâm 4 Góc Chữ L (Viewfinder Reticle)\n• Chữ Hero 64sp Monospace + Huy hiệu Màu Tiền Polymer/Cotton\n• Thẻ [VÍ TÍCH LŨY] (>= 44dp) & Nút [XÓA VÍ] (>= 44dp)"]
+        L5["Lớp 5 (Đỉnh - z=4): Ngăn Kéo Kiểm Thử (SimulationControls) & AuthorModal\n• SimulationControls mặc định ẨN HOÀN TOÀN (isOpen = false / View.GONE)\n• Chỉ mở khi nhà phát triển bấm nút [KIỂM THỬ]"]
     end
 
     L1 --> L2 --> L3 --> L4 --> L5
@@ -49,7 +49,7 @@ Toàn bộ hằng số màu sắc, cỡ chữ và bảng màu mệnh giá đư�
 | **Chữ chính & Viền (`primaryYellow`)** | `#FFE600` | `#000000` | **`16.74 : 1`** (AAA) | Bước sóng ~575nm kích thích đồng thời tế bào nón L và M mạnh nhất cho mắt nhìn mờ. |
 | **Chữ phụ & Nhãn (`secondaryWhite`)** | `#FFFFFF` | `#000000` | **`21.00 : 1`** (AAA) | Độ tương phản lý thuyết tối đa cho thông tin bản quyền và hướng dẫn. |
 | **Đèn Flash Bật (`statusTorchOn`)** | `#00FF66` | `#000000` | **`15.86 : 1`** (AAA) | Báo hiệu trạng thái Đèn Flash đang bật hoặc Khung ngắm đã khóa mệnh giá tiền. |
-| **Cảnh báo / Xóa ví (`alertRed`)** | `#FF3B30` | `#000000` | **`5.89 : 1`** (AA Large) | Viền nút `🔄 XÓA VÍ` giúp người thị lực kém phân biệt vùng xóa với vùng đọc ví. |
+| **Cảnh báo / Xóa ví (`alertRed`)** | `#FF3B30` | `#000000` | **`5.89 : 1`** (AA Large) | Viền nút `[XÓA VÍ]` giúp người thị lực kém phân biệt vùng xóa với vùng đọc ví. |
 
 ### 2.2. Khung Ngắm Định Tâm 4 Góc Chữ L (`Viewfinder Reticle` — `testID="viewfinder-reticle"`)
 
@@ -58,9 +58,9 @@ Trong [`TactileDisplay.tsx`](file:///c:/Users/ADMIN/NCKH/App_android/src/compone
 ```mermaid
 stateDiagram-v2
     [*] --> IDLE_SEARCH
-    IDLE_SEARCH: ⚪ ĐANG CHỜ TIỀN (IDLE)\nViền góc: #555555 / #FFE600 mờ\nChữ Hero 64sp: "ĐƯA TIỀN VÀO"\nPhụ đề: "Đưa tờ tiền cách camera sau 12–20cm"
-    CANDIDATE_HINT: 🟡 PHÁT HIỆN BÓNG TỜ TIỀN (0.28 <= score < 0.50 hoặc STABILIZING)\nViền góc: #FFE600 (Solar Yellow rực sáng)\nPhát xung rung dẫn đường 25ms\nTrạng thái: "✋ Phát hiện bóng tờ tiền — Giữ yên tay..."
-    LOCKED_STABLE: 🟢 ĐÃ KHÓA MỆNH GIÁ (>= 4/5 Frame Consensus)\nViền góc: #00FF66 (Xanh lá rực) hoặc Màu đặc trưng tờ tiền\nChữ Hero 64sp: "500.000 đ"\nHiển thị Huy hiệu Màu Polymer/Cotton + Phát giọng đọc & Mã rung
+    IDLE_SEARCH: [ĐANG CHỜ TIỀN: IDLE]\nViền góc: #555555 / #FFE600 mờ\nChữ Hero 64sp: "ĐƯA TIỀN VÀO"\nPhụ đề: "Đưa tờ tiền cách camera sau 12–20cm"
+    CANDIDATE_HINT: [PHÁT HIỆN BÓNG TỜ TIỀN] (0.28 <= score < 0.50 hoặc STABILIZING)\nViền góc: #FFE600 (Solar Yellow rực sáng)\nPhát xung rung dẫn đường 25ms\nTrạng thái: "Phát hiện bóng tờ tiền — Giữ yên tay..."
+    LOCKED_STABLE: [ĐÃ KHÓA MỆNH GIÁ] (>= 4/5 Frame Consensus)\nViền góc: #00FF66 (Xanh lá rực) hoặc Màu đặc trưng tờ tiền\nChữ Hero 64sp: "500.000 đ"\nHiển thị Huy hiệu Màu Polymer/Cotton + Phát giọng đọc & Mã rung
 
     IDLE_SEARCH --> CANDIDATE_HINT: Có candidateHint hoặc STABILIZING
     CANDIDATE_HINT --> IDLE_SEARCH: Tờ tiền rời khung ngắm trước khi đủ 4/5 frame\n(Tự động xóa chữ dẫn đường về IDLE)
@@ -73,7 +73,7 @@ stateDiagram-v2
 Được định nghĩa tại [`src/constants/theme.ts`](file:///c:/Users/ADMIN/NCKH/App_android/src/constants/theme.ts) (hàm [`getDenominationVisualSpec`](file:///c:/Users/ADMIN/NCKH/App_android/src/constants/theme.ts)), mỗi mệnh giá tiền Việt Nam khi được nhận diện sẽ hiển thị một **Huy hiệu Màu sắc & Chất liệu (`testID="polymer-color-badge"`)** có nền màu bão hòa cao và chữ đen đậm (`#000000`, tỷ lệ tương phản chữ đen trên nền huy hiệu luôn $\ge 5.0:1$):
 
 | Mệnh giá (`classId`) | Chất liệu (`material`) | Màu đặc trưng Ngân hàng Nhà nước | Mã Hex (`colorHex`) | Nhãn Huy hiệu (`badgeLabel`) |
-| :---: | :---: | :--- | :---: | :--- |
+| :---: | :--- | :--- | :---: | :--- |
 | **`500.000 đ`** | `POLYMER` | Xanh lục lam sáng (Cyan-Teal) | `#00E5FF` | `POLYMER • 500K XANH LỤC LAM` |
 | **`200.000 đ`** | `POLYMER` | Đỏ cam sáng (Warm Amber-Red) | `#FF6D00` | `POLYMER • 200K ĐỎ CAM` |
 | **`100.000 đ`** | `POLYMER` | Xanh lá cây sáng (Bright Green) | `#00E676` | `POLYMER • 100K XANH LÁ` |
@@ -87,9 +87,9 @@ stateDiagram-v2
 ### 2.4. Huy Hiệu Trạng Thái Năng Lượng (`Power State Badge` — `testID="power-state-badge"`)
 
 Giúp người thị lực kém và người hỗ trợ nhận biết tức thì trạng thái hoạt động của Bộ điều tốc năng lượng 3 tầng ([`formatPowerStateBadge`](file:///c:/Users/ADMIN/NCKH/App_android/src/constants/theme.ts)):
-- **`🔍 ĐANG QUÉT`** (`#00FF66` — Chế độ `BURST 130ms`): Khi có chuyển động tay hoặc đang xác thực tờ tiền.
-- **`🌿 ECO`** (`#FFE600` — Chế độ `ECO 650ms`): Khi đã đọc xong tờ tiền và tay đang giữ yên hoặc cảnh tĩnh $> 2.5\text{s}$.
-- **`💤 CHỜ`** (`#9E9E9E` — Chế độ `HIBERNATION 1500ms/3000ms`): Khi đặt máy trên bàn hoặc bỏ túi không dùng $> 8\text{s}$.
+- **`[ĐANG QUÉT]`** (`#00FF66` — Chế độ `BURST 130ms`): Khi có chuyển động tay hoặc đang xác thực tờ tiền.
+- **`[ECO]`** (`#FFE600` — Chế độ `ECO 650ms`): Khi đã đọc xong tờ tiền và tay đang giữ yên hoặc cảnh tĩnh $> 2.5\text{s}$.
+- **`[CHỜ]`** (`#9E9E9E` — Chế độ `HIBERNATION 1500ms/3000ms`): Khi đặt máy trên bàn hoặc bỏ túi không dùng $> 8\text{s}$.
 
 ---
 
@@ -103,7 +103,7 @@ Khi người khiếm thị đếm tiền ngoài đời thực:
 
 Nếu không xử lý công thái học này, sẽ xảy ra **2 lỗi nghiêm trọng**:
 1. **Chạm nhầm nút giả lập**: Nếu bảng 15 nút giả lập (`1K`..`500K`) hiện ở đáy màn hình, lòng bàn tay sẽ chạm trúng làm máy đọc tiền giả.
-   - **Giải pháp**: Thu gọn mặc định `SimulationControls` (`isSimulationDrawerOpen = false` trong [`App.tsx`](file:///c:/Users/ADMIN/NCKH/App_android/App.tsx) và `controlsPanel.setVisibility(View.GONE)` trong `MainActivity.java`). Chỉ khi bấm nút nhỏ **`🛠️ Kiểm thử`** (`testID="toggle-simulation-drawer-btn"`) trên thanh Header thì ngăn kéo mới mở ra.
+   - **Giải pháp**: Thu gọn mặc định `SimulationControls` (`isSimulationDrawerOpen = false` trong [`App.tsx`](file:///c:/Users/ADMIN/NCKH/App_android/App.tsx) và `controlsPanel.setVisibility(View.GONE)` trong `MainActivity.java`). Chỉ khi bấm nút nhỏ **`[KIỂM THỬ]`** (`testID="toggle-simulation-drawer-btn"`) trên thanh Header thì ngăn kéo mới mở ra.
 2. **Nhiễm cử chỉ đa điểm do ngón tay nắm viền máy**: Khi ngón cái tì vào mép màn hình (Pointer #0 tại $x = 6\text{px}$) trong lúc ngón trỏ tay kia chạm vào giữa màn hình để nghe lại (Pointer #1 tại $x = 200\text{px}$), hệ điều hành báo `pointerCount = 2`. Một bộ nhận diện cử chỉ thông thường sẽ tưởng nhầm đây là thao tác 2 ngón hoặc hủy bỏ cú chạm đơn!
 
 ### 3.2. Thuật Toán Lọc Điểm Chạm Theo Từng Ngón (`Per-Pointer Safe Zone Filtering`)
@@ -137,8 +137,8 @@ Lớp [`GestureRecognizer`](file:///c:/Users/ADMIN/NCKH/App_android/src/utils/ge
 | Cử chỉ (`GestureAction`) | Thao tác vật lý | Thông số kỹ thuật | Hành động hệ thống & Phản hồi |
 | :--- | :--- | :--- | :--- |
 | **`SINGLE_TAP`** | Chạm 1 ngón rồi nhấc lên | Thời gian giữ $< 1000\text{ms}$, dịch chuyển $\le 40\text{px}$, không có lần chạm thứ 2 trong $300\text{ms}$. | **Đọc lại kết quả hiện tại** (bỏ qua khoảng lặng Cooldown $1.5\text{s}$). Nếu không có tiền, đọc *"Không có tiền trong tầm quét"*. |
-| **`DOUBLE_TAP`** | Chạm đúp 1 ngón liên tiếp | Khoảng cách giữa 2 lần chạm $\le 300\text{ms}$ (`doubleTapThresholdMs`). | **Bật / Tắt Đèn Flash thủ công** (`isManualOverride = true`), phát âm hiệu `torch_on.wav` / `torch_off.wav` + rung đúp `[0, 40, 60, 40]`. Khi tắt đèn thủ công, hệ thống tự động tái kích hoạt Auto-Torch theo **2 nhánh thông minh** (khi ra chỗ sáng $\ge 35\text{ lux}$ hoặc sau $\ge 2.5\text{s}$ khi bước sang vùng tối khác / tối sâu hơn — Ticket 12). |
-| **`LONG_PRESS`** | Nhấn giữ 1 ngón tại chỗ | Giữ liên tục $\ge 1000\text{ms}$ (`longPressThresholdMs`), dịch chuyển $\le 40\text{px}$. | **Đọc tổng tiền Ví tích lũy trong phiên** (`SessionWalletState`) + rung dài đầm tay `200ms`. Bật khóa **`isReadingWallet = true`** bảo vệ câu đọc Ví không bị ngắt khi người dùng hạ tay cầm tiền xuống làm khung hình trống (`EMPTY` — Ticket 13). |
+| **`DOUBLE_TAP`** | Chạm đúp 1 ngón liên tiếp | Khoảng cách giữa 2 lần chạm $\le 300\text{ms}$ (`doubleTapThresholdMs`). | **Bật / Tắt Đèn Flash thủ công** (`isManualOverride = true`), phát âm hiệu `torch_on.wav` / `torch_off.wav` + rung đúp `[0, 40, 60, 40]`. Khi tắt đèn thủ công, hệ thống tự động tái kích hoạt Auto-Torch theo **2 nhánh thông minh** (khi ra chỗ sáng $\ge 35\text{ lux}$ hoặc sau $\ge 2.5\text{s}$ khi bước sang vùng tối khác / tối sâu hơn). |
+| **`LONG_PRESS`** | Nhấn giữ 1 ngón tại chỗ | Giữ liên tục $\ge 1000\text{ms}$ (`longPressThresholdMs`), dịch chuyển $\le 40\text{px}$. | **Đọc tổng tiền Ví tích lũy trong phiên** (`SessionWalletState`) + rung dài đầm tay `200ms`. Bật khóa **`isReadingWallet = true`** bảo vệ câu đọc Ví không bị ngắt khi người dùng hạ tay cầm tiền xuống làm khung hình trống (`EMPTY`). |
 | **`TWO_FINGER_DOUBLE_TAP`** | Chạm đúp bằng 2 ngón tay | 2 lần chạm 2 ngón cách nhau $\le 350\text{ms}$ (`twoFingerDoubleTapThresholdMs`), mỗi lần giữ $< 500\text{ms}$, kéo $\le 40\text{px}$. | **Đặt lại Ví tích lũy về `0 đ`**, phát âm hiệu `wallet_reset.wav` + chuỗi rung cảnh báo `[0, 60, 50, 60, 50, 120]`. |
 
 ```mermaid
@@ -189,7 +189,7 @@ sequenceDiagram
     actor User as Người Khiếm Thị (Đang Bật TalkBack)
     participant TB as Hệ điều hành Android TalkBack\n(TouchExploration)
     participant Canvas as rootPulseContainer / GestureCanvas\n(AccessibilityDelegate + OnHoverListener)
-    participant Buttons as Các Nút Trợ Năng Trực Tiếp (>= 44dp)\n(🔦 ĐÈN | 👛 VÍ | 🔄 XÓA VÍ)
+    participant Buttons as Các Nút Trợ Năng Trực Tiếp (>= 44dp)\n([ĐÈN PIN] | [VÍ TÍCH LŨY] | [XÓA VÍ])
     participant Audio as MoneyAudioModule\n(MP3/WAV + AudioFocus + Interrupt)
 
     rect rgb(25, 35, 50)
@@ -209,7 +209,7 @@ sequenceDiagram
 
     rect rgb(45, 30, 45)
     Note over User,Audio: Kịch bản C: Người dùng vuốt chọn các nút lớn >= 44dp hoặc mở Menu Hành động TalkBack
-    User->>TB: Vuốt phải chọn nút "🔦 ĐÈN" / "👛 VÍ TÍCH LŨY" / "🔄 XÓA VÍ" rồi chạm đúp
+    User->>TB: Vuốt phải chọn nút "[ĐÈN PIN]" / "[VÍ TÍCH LŨY]" / "[XÓA VÍ]" rồi chạm đúp
     TB->>Buttons: OnClickListener / AccessibilityAction (0x1001..0x1004)
     Buttons->>Audio: Bật/Tắt đèn HOẶC Đọc tổng ví HOẶC Xóa ví về 0đ
     end
@@ -228,10 +228,10 @@ sequenceDiagram
    - Mọi vùng văn bản biến thiên (`hero-denomination-text`, `detection-summary-text`, `announcement-status-text`) trong [`TactileDisplay.tsx`](file:///c:/Users/ADMIN/NCKH/App_android/src/components/TactileDisplay.tsx) đều đặt `accessibilityLiveRegion="none"`, ngăn TalkBack tự ý đọc đè khi camera đang quét.
 2. **Tách biệt Bề mặt Cử chỉ Nền (`talkback-gesture-surface`) và Các Nút Chạm Trực tiếp ($\ge 44\text{dp}$)**:
    - Trong [`GestureCanvas.tsx`](file:///c:/Users/ADMIN/NCKH/App_android/src/components/GestureCanvas.tsx), bề mặt nhận focus của vùng cử chỉ được đặt ở lớp nền tuyệt đối (`StyleSheet.absoluteFill`), giúp người dùng TalkBack vừa có thể chạm vào khoảng trống để nghe lại, vừa có thể vuốt/dò chạm trực tiếp vào các nút lớn:
-     - **`🔦 ĐÈN`** (`testID="torch-toggle-btn"`, `minHeight: 44dp`, `minWidth: 76dp`)
-     - **`👛 VÍ TÍCH LŨY`** (`testID="wallet-card-btn"`, `minHeight: 48dp`)
-     - **`🔄 XÓA VÍ`** (`testID="wallet-reset-btn"`, `minHeight: 44dp`, `minWidth: 92dp`)
-     - **`ℹ️ Tác giả`** (`testID="open-author-modal-btn"`) & **`🛠️ Kiểm thử`** (`testID="toggle-simulation-drawer-btn"`)
+     - **`[ĐÈN PIN]`** (`testID="torch-toggle-btn"`, `minHeight: 44dp`, `minWidth: 76dp`)
+     - **`[VÍ TÍCH LŨY]`** (`testID="wallet-card-btn"`, `minHeight: 48dp`)
+     - **`[XÓA VÍ]`** (`testID="wallet-reset-btn"`, `minHeight: 44dp`, `minWidth: 92dp`)
+     - **`[TÁC GIẢ]`** (`testID="open-author-modal-btn"`) & **`[KIỂM THỬ]`** (`testID="toggle-simulation-drawer-btn"`)
 3. **4 Hành động Trợ năng Tùy chỉnh trong Menu TalkBack (`Custom AccessibilityActions`)**:
    - Đăng ký trực tiếp vào `AccessibilityNodeInfo` trên cả Native (`A11Y_ACTION_REREAD = 0x1001`, `A11Y_ACTION_TOGGLE_TORCH = 0x1002`, `A11Y_ACTION_READ_WALLET = 0x1003`, `A11Y_ACTION_RESET_WALLET = 0x1004`) và React Native (`accessibilityActions`):
      1. *"Đọc lại mệnh giá tiền hiện tại"*
@@ -250,7 +250,7 @@ sequenceDiagram
 Khi người khiếm thị đưa tờ tiền vào trước ống kính camera, tờ tiền thường đi qua vùng rìa hoặc hơi nghiêng trước khi đạt độ nét cao để chốt $\ge 4/5$ frame.
 - Ngay khi bộ giải mã YOLO26 phát hiện **bóng tờ tiền ở ngưỡng gợi ý sớm (`0.28 <= score < 0.50` $\rightarrow$ `hasCandidateHint = true`)** hoặc bộ lọc 5-frame bước vào pha **`STABILIZING`** (khi chưa khóa mệnh giá ổn định):
   - Hệ thống phát một **xung rung xúc giác nhẹ `25ms`** ([`CANDIDATE_GUIDANCE_PULSE_MS = 25`](file:///c:/Users/ADMIN/NCKH/App_android/src/services/haptics.ts)) với khoảng cách chống lặp **`1200ms`** (`CANDIDATE_GUIDANCE_COOLDOWN_MS = 1200`).
-  - Màn hình HUD đồng thời hiển thị dòng hướng dẫn: **`"✋ Phát hiện bóng tờ tiền — Giữ yên tay..."`**.
+  - Màn hình HUD đồng thời hiển thị dòng hướng dẫn: **`"Phát hiện bóng tờ tiền — Giữ yên tay..."`**.
   - Nếu người dùng rút tờ tiền ra khỏi khung ngắm trước khi đủ 4/5 frame (`!hasCandidateHint && debounced.state === 'EMPTY'`), cờ `hadCandidateHintRef` / `wasCandidateGuidanceActive` sẽ tự động trả giao diện và khung ngắm về trạng thái chờ mặc định, không để kẹt chữ trên màn hình.
 
 ### 6.2. Bảng Mã Rung Phân Biệt 9 Mệnh Giá Tiền Việt Nam (`getDenominationVibrationPattern`)
@@ -282,7 +282,7 @@ flowchart TD
 
 ---
 
-## 7. Trải Nghiệm Cầm Quét Nhiều Tờ Tiền, Bảo Vệ Giọng Đọc Ví & Khôi Phục Đèn Thông Minh (`Tickets 12 & 13`)
+## 7. Trải Nghiệm Cầm Quét Nhiều Tờ Tiền, Bảo Vệ Giọng Đọc Ví & Khôi Phục Đèn Thông Minh
 
 Trong thực tế sử dụng hàng ngày, người khiếm thị thường cầm **2 đến 3 tờ tiền xòe trên tay** để kiểm tra nhanh khi giao dịch, hạ tay xuống ngay khi nghe đọc tổng Ví tích lũy, hoặc chạm đúp tắt đèn pin rồi di chuyển sang góc tối khác. Ba cải tiến UX trọng tâm dưới đây đảm bảo trải nghiệm âm thanh và ánh sáng luôn tự nhiên, chính xác 100%:
 
@@ -316,7 +316,7 @@ sequenceDiagram
 
     rect rgb(30, 35, 55)
     Note over User,Audio: Kịch bản 2: Nhấn giữ 1 giây nghe Tổng Ví tích lũy và hạ tay cầm tiền xuống (isReadingWallet Lock)
-    User->>Audio: Nhấn giữ 1s (Long Press) hoặc chạm nút "👛 VÍ TÍCH LŨY"
+    User->>Audio: Nhấn giữ 1s (Long Press) hoặc chạm nút "[VÍ TÍCH LŨY]"
     Audio->>Audio: Đặt isReadingWallet = true + Rung 200ms
     Audio-->>User: Bắt đầu đọc: "Hai tờ một trăm nghìn..."
     User->>Cam: Hạ tay cầm tiền xuống để lắng nghe -> Khung hình chuyển sang EMPTY

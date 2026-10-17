@@ -86,7 +86,7 @@ All product surfaces maintain author attribution to **Nguyễn Quang Toàn** (`N
 - Apply True OLED Black `{colors.background}` across all root canvases and backgrounds to eliminate pixel light emission on OLED panels.
 - Apply Solar Yellow `{colors.primary-yellow}` for primary branding, active highlights, viewfinder candidate cues, and copyright text (exceeds 18:1 contrast on black).
 - Apply Pure White `{colors.secondary-white}` for high-contrast secondary headers, card counts, and border accents (21:1 contrast on black).
-- Apply Accent Green `{colors.accent-green}` exclusively for active live scanning status badges (`🔍 ĐANG QUÉT`).
+- Apply Accent Green `{colors.accent-green}` exclusively for active live scanning status badges (`[ĐANG QUÉT]`).
 - Apply Accent Red `{colors.accent-red}` exclusively for destructive wallet reset affordances (`XÓA VÍ`).
 - Apply Muted Dark Surface `{colors.surface-dark}` and Elevated Surface `{colors.surface-elevated}` for card backgrounds, header toolbars, and dialog containers.
 - Apply Full-Screen Chromatic Shift across `{colors.denom-500k}` through `{colors.denom-1k}` on both the 8dp edge breathing border and the viewfinder reticle when a banknote is recognized.

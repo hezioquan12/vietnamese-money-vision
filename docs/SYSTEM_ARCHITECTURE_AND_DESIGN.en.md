@@ -138,16 +138,16 @@ In [`yoloDecoder.ts`](file:///c:/Users/ADMIN/NCKH/App_android/src/services/detec
 
 Related source files: [`src/services/debounce/TemporalDebounceFilter.ts`](file:///c:/Users/ADMIN/NCKH/App_android/src/services/debounce/TemporalDebounceFilter.ts), [`TemporalDebounceFilter.kt`](file:///c:/Users/ADMIN/NCKH/App_android/android/app/src/main/java/com/nckh/moneyvision/detector/TemporalDebounceFilter.kt), and `MainActivity.java` in [`scripts/android-sdk-builder.mjs`](file:///c:/Users/ADMIN/NCKH/App_android/scripts/android-sdk-builder.mjs).
 
-When a blind user holds one or more banknotes in front of the lens, slight hand tremor can blur an individual frame or cause multiple banknotes to enter focus a few hundred milliseconds apart. This subsystem combines two layers: **5-Frame Sliding Window Majority Voting (`TemporalDebounceFilter`)** and **Presentation-Peak Wallet Reconciliation (`PresentationWalletAccumulator` — Ticket 13)**.
+When a blind user holds one or more banknotes in front of the lens, slight hand tremor can blur an individual frame or cause multiple banknotes to enter focus a few hundred milliseconds apart. This subsystem combines two layers: **5-Frame Sliding Window Majority Voting (`TemporalDebounceFilter`)** and **Presentation-Peak Wallet Reconciliation (`PresentationWalletAccumulator`)**.
 
 ### 3.1. $N = 5$ Sliding Window & $\ge 4/5$ Majority Consensus State Machine
 
 ```mermaid
 stateDiagram-v2
     [*] --> EMPTY
-    EMPTY: ⚪ EMPTY\nStable Signature: "EMPTY"\nNo banknotes in frame
-    STABILIZING: 🟡 STABILIZING\nAccumulating votes in 5-frame sliding window\n(e.g., 1/5, 2/5, 3/5 frames seeing 500k)\n-> Triggers 25ms "Hold hand steady" guidance pulse
-    STABLE: 🟢 STABLE\nReaches >= 4/5 frame consensus on identical signature\n(e.g., "500000:1" or "100000:2|50000:1")\n-> Dispatches to PresentationWalletAccumulator & Audio/Haptics
+    EMPTY: [EMPTY]\nStable Signature: "EMPTY"\nNo banknotes in frame
+    STABILIZING: [STABILIZING]\nAccumulating votes in 5-frame sliding window\n(e.g., 1/5, 2/5, 3/5 frames seeing 500k)\n-> Triggers 25ms "Hold hand steady" guidance pulse
+    STABLE: [STABLE]\nReaches >= 4/5 frame consensus on identical signature\n(e.g., "500000:1" or "100000:2|50000:1")\n-> Dispatches to PresentationWalletAccumulator & Audio/Haptics
 
     EMPTY --> STABILIZING: Banknote appears in new frame (1..3/5 votes)
     STABILIZING --> EMPTY: >= 3 consecutive empty frames (Early withdrawal)
@@ -161,7 +161,7 @@ stateDiagram-v2
 2. **Single-Frame Hand-Jitter Immunity**:
    - Given 5 consecutive frames `[500k, 500k, EMPTY (tremor), 500k, 500k]`, the vote count for `"500000:1"` is $4/5 \ge 4 \rightarrow$ the state remains rock-solid at `STABLE` (`500k`) without cutting off audio.
 
-### 3.2. Presentation-Peak Wallet Accumulator (`PresentationWalletAccumulator` — Ticket 13)
+### 3.2. Presentation-Peak Wallet Accumulator (`PresentationWalletAccumulator`)
 
 #### Why Frame-to-Frame Subtraction (`nextCount - prevCount`) Over-Counts Multi-Note Handfuls
 When a blind user holds **2 banknotes** in front of the camera, four physical phenomena occur regularly:
@@ -184,15 +184,15 @@ flowchart TD
 
     WasEmptyCheck -->|"Yes (Just recovered from EMPTY)"| CheckDropout{"Check Presentation Continuity After Brief Dropout:\n1. Δt_empty < PRESENTATION_CONTINUITY_GRACE_MS (1500ms)?\n2. N_new > lastPresentationPeakTotalNotes (Expanding to multi-note)?\n3. Shares >= 1 denomination with lastPresentationCreditedCounts?\n(Or exact same note re-stabilized < 1200ms)"}
 
-    CheckDropout -->|"Yes (User adjusted grip < 1.5s\nto expose 2nd note!)"| Uncommit["🔄 UN-COMMIT & RESUME PREVIOUS PRESENTATION\n• Subtract lastPresentationCreditedCounts from baselineCounts\n• Restore presentationCreditedCounts = lastPresentationCreditedCounts\n• Proceed to Continuous Peak Reconciliation below!"]
-    CheckDropout -->|"No (Genuine new presentation,\ne.g., sequential 1 note -> EMPTY -> 1 note)"| NewPres["🆕 START NEW PRESENTATION\n• presentationCreditedCounts = clone(newCounts)\n• presentationPeakTotalNotes = N_new"]
+    CheckDropout -->|"Yes (User adjusted grip < 1.5s\nto expose 2nd note!)"| Uncommit["[ACTION: UN-COMMIT & RESUME PREVIOUS PRESENTATION]\n• Subtract lastPresentationCreditedCounts from baselineCounts\n• Restore presentationCreditedCounts = lastPresentationCreditedCounts\n• Proceed to Continuous Peak Reconciliation below!"]
+    CheckDropout -->|"No (Genuine new presentation,\ne.g., sequential 1 note -> EMPTY -> 1 note)"| NewPres["[ACTION: START NEW PRESENTATION]\n• presentationCreditedCounts = clone(newCounts)\n• presentationPeakTotalNotes = N_new"]
 
     WasEmptyCheck -->|"No (Continuous active presentation)"| Reconcile{"Reconcile M_new against\npresentationCreditedCounts"}
     Uncommit --> Reconcile
 
-    Reconcile -->|"Case 1: Subset / Occlusion Flicker (2 -> 1 -> 2)\nFor all d: newCounts[d] <= credited[d]"| CaseSubset["🛡️ PRESERVE PRESENTATION PEAK (Δ = 0)\nZero duplicate addition when note count dips and recovers"]
-    Reconcile -->|"Case 2: Same-Count Denomination Refinement (>= 2 notes)\nN_new == N_credited >= 2 & N_lastActive == N_new\nwithin DENOMINATION_REFINEMENT_WINDOW_MS (1500ms)"| CaseRefine["🔧 IN-PLACE DENOMINATION REFINEMENT\npresentationCreditedCounts = clone(newCounts)\n(e.g., {100k:1, 20k:1} -> {100k:1, 50k:1} = 150k, 2 notes)"]
-    Reconcile -->|"Case 3: Peak Expansion (1 -> 2 notes or pan A -> B)"| CaseExpand["📈 UPDATE DENOMINATION PEAK\ncredited[d] = max(credited[d], newCounts[d])\nCredits only the net peak expansion!"]
+    Reconcile -->|"Case 1: Subset / Occlusion Flicker (2 -> 1 -> 2)\nFor all d: newCounts[d] <= credited[d]"| CaseSubset["[GUARD: PRESERVE PRESENTATION PEAK (Δ = 0)]\nZero duplicate addition when note count dips and recovers"]
+    Reconcile -->|"Case 2: Same-Count Denomination Refinement (>= 2 notes)\nN_new == N_credited >= 2 & N_lastActive == N_new\nwithin DENOMINATION_REFINEMENT_WINDOW_MS (1500ms)"| CaseRefine["[ACTION: IN-PLACE DENOMINATION REFINEMENT]\npresentationCreditedCounts = clone(newCounts)\n(e.g., {100k:1, 20k:1} -> {100k:1, 50k:1} = 150k, 2 notes)"]
+    Reconcile -->|"Case 3: Peak Expansion (1 -> 2 notes or pan A -> B)"| CaseExpand["[ACTION: UPDATE DENOMINATION PEAK]\ncredited[d] = max(credited[d], newCounts[d])\nCredits only the net peak expansion!"]
 
     NewPres --> CalcTotal["Exact Session Wallet Total:\nW_total[d] = baselineCounts[d] + presentationCreditedCounts[d]"]
     CaseSubset --> CalcTotal
@@ -202,15 +202,15 @@ flowchart TD
 
 ---
 
-## 4. Subsystem 3: 4-Layer Anti-Strobe Smart Torch & 2-Path Smart Manual-OFF Recovery (`Tickets 08 & 12`)
+## 4. Subsystem 3: 4-Layer Anti-Strobe Smart Torch & 2-Path Smart Manual-OFF Recovery
 
 Related source files: [`src/services/camera/SmartTorchController.ts`](file:///c:/Users/ADMIN/NCKH/App_android/src/services/camera/SmartTorchController.ts), [`src/services/camera/LuminanceAnalyzer.ts`](file:///c:/Users/ADMIN/NCKH/App_android/src/services/camera/LuminanceAnalyzer.ts), [`MoneyCameraView.kt`](file:///c:/Users/ADMIN/NCKH/App_android/android/app/src/main/java/com/nckh/moneyvision/camera/MoneyCameraView.kt), and `MainActivity.java` in [`scripts/android-sdk-builder.mjs`](file:///c:/Users/ADMIN/NCKH/App_android/scripts/android-sdk-builder.mjs).
 
 ### 4.1. Two Opposing Optical Failure Modes in the Field
 
-1. **Close-Range Optical Feedback Strobe Loop When Torch Is ON (`Ticket 08`)**:
+1. **Close-Range Optical Feedback Strobe Loop When Torch Is ON**:
    - In a dark room (`< 25 lux` for `1000ms`), Auto-Torch turns ON. As soon as a Polymer banknote is held 5–20 cm from the lens, LED light reflects off the glossy substrate back into the camera sensor, spiking `avgLuma` from `15 lux` to `180–245 lux`. A naive threshold (`avgLuma >= 60 lux` $\rightarrow$ turn OFF) enters an infinite strobe loop.
-2. **Manual-OFF Lockout When Double-Tapping OFF and Running Back Into Darkness (`Ticket 12`)**:
+2. **Manual-OFF Lockout When Double-Tapping OFF and Running Back Into Darkness**:
    - After Auto-Torch turns ON, if the user double-taps to manually turn the torch OFF (`isManualOverride = true`), and then walks through an indoor hallway (`35–58 lux`, front sensor `< 85 lux`) or runs directly into another dark corner (`< 25 lux`), requiring the torch-ON anti-reflection threshold (`avgLuma >= 60 lux && ambientSensorLux >= 85 lux`) permanently locks `isManualOverride = true` so the torch never turns back on.
    - Conversely, clearing `isManualOverride` immediately while the user is still holding the phone stationary in the exact same dark spot would cause Auto-Torch to turn right back on `1 second` after the user explicitly turned it off.
 
@@ -222,39 +222,39 @@ flowchart TD
 
     CheckState -->|"Currently OFF"| CheckManualOff{"Is Manual-OFF Override Active?\n(isManualOverride == true)"}
 
-    CheckManualOff -->|"Yes (Ticket 12)"| SettleCheck{"Past LED decay settle window?\n(elapsed >= MANUAL_OFF_SETTLE_MS = 250ms)"}
+    CheckManualOff -->|"Yes (Manual override engaged)"| SettleCheck{"Past LED decay settle window?\n(elapsed >= MANUAL_OFF_SETTLE_MS = 250ms)"}
     SettleCheck -->|"No (< 250ms)"| NoOpSettle["Ignore 1–3 residual LED frames in ImageReader FIFO\nKeep isManualOverride = true"]
     SettleCheck -->|"Yes (>= 250ms)"| PathACheck{"Path A: Entered Non-Dark Scene?\n(avgLuma >= 35.0 lux & !hasSpatialReflection)\n(Does NOT require front sensor >= 85 lux!)"}
-    PathACheck -->|"Yes"| ClearOverrideA["🔓 RE-ARM VIA PATH A\nisManualOverride = false\nReset manualOffTimestamp & baseline"]
+    PathACheck -->|"Yes"| ClearOverrideA["[RE-ARM VIA PATH A]\nisManualOverride = false\nReset manualOffTimestamp & baseline"]
     PathACheck -->|"No (Still in Dark < 35 lux)"| LatchMotion["Path B: Capture Baseline & Latch Relocation Motion\n• Record manualOffBaselineLuma (after 250ms)\n• After 400ms (ignores double-tap finger jitter):\n  If motionDeltaY >= 4.5 OR accelDelta >= 0.35 m/s²\n  OR (baseline - avgLuma) >= 6.0 lux\n  -> Latch hasMovedSinceManualOff = true!"]
     LatchMotion --> GraceCheck{"Elapsed >= 2500ms Grace Period\nAND hasMovedSinceManualOff == true?"}
     GraceCheck -->|"Not yet 2.5s OR Stationary at same spot"| KeepManualOff["Keep Torch OFF per user intent\n(isManualOverride = true)"]
-    GraceCheck -->|"Elapsed >= 2.5s & Moved / Darkened"| ClearOverrideB["🔓 RE-ARM VIA PATH B\nisManualOverride = false\nSeed lowLightStartTime = now"]
+    GraceCheck -->|"Elapsed >= 2.5s & Moved / Darkened"| ClearOverrideB["[RE-ARM VIA PATH B]\nisManualOverride = false\nSeed lowLightStartTime = now"]
 
     CheckManualOff -->|"No"| TurnOnCheck{"avgLuma < 25 lux\ncontinuously >= 1000ms?\n& !isManualOverride\n& !isOscillationLatched"}
     ClearOverrideA --> TurnOnCheck
     ClearOverrideB --> TurnOnCheck
-    TurnOnCheck -->|"Yes"| ActionOn["🔥 AUTO TURN ON TORCH (TURN_ON)\n• Snapshot preTorchAmbientSensorLux\n• Open 450ms–1000ms window to capture postTorchBaselineLuma"]
+    TurnOnCheck -->|"Yes"| ActionOn["[AUTO TURN ON TORCH: TURN_ON]\n• Snapshot preTorchAmbientSensorLux\n• Open 450ms–1000ms window to capture postTorchBaselineLuma"]
     TurnOnCheck -->|"No"| NoOp1["Remain OFF (NO_OP)"]
 
     CheckState -->|"Currently ON"| L4_Manual{"Layer 4A: Manually Turned ON?\n(isManualOverride == true)"}
-    L4_Manual -->|"Yes"| HoldManual["🔒 ABSOLUTE MANUAL HOLD\n(GUARD: MANUAL_OVERRIDE_LOCK)"]
+    L4_Manual -->|"Yes"| HoldManual["[ABSOLUTE MANUAL HOLD]\n(GUARD: MANUAL_OVERRIDE_LOCK)"]
 
     L4_Manual -->|"No (Auto-Torch)"| L4_Latch{"Layer 4B: Oscillation Circuit Breaker Active?\n(isOscillationLatched == true for 60s)"}
-    L4_Latch -->|"Yes"| HoldLatch["🔒 60-SECOND CIRCUIT BREAKER HOLD\n(GUARD: OSCILLATION_LATCH_HOLD)"]
+    L4_Latch -->|"Yes"| HoldLatch["[60-SECOND CIRCUIT BREAKER HOLD]\n(GUARD: OSCILLATION_LATCH_HOLD)"]
 
     L4_Latch -->|"No"| L3_Detect{"Layer 3A: Banknote Present in Frame?\n(hasActiveDetection == true)"}
-    L3_Detect -->|"Yes"| HoldDetect["🔒 LOCK TORCH WHILE SCANNING MONEY\n(GUARD: ACTIVE_DETECTION_LOCK)"]
+    L3_Detect -->|"Yes"| HoldDetect["[LOCK TORCH WHILE SCANNING MONEY]\n(GUARD: ACTIVE_DETECTION_LOCK)"]
 
     L3_Detect -->|"No"| L2_Glare{"Layers 1 & 2: Close-Range Reflection & Ambient Sensor Check\n1. glareRatio >= 0.08 or centerToBorderRatio >= 1.30?\n2. Front Sensor.TYPE_LIGHT still < 85 lux?\n3. avgLuma < max(175, min(225, postTorchBaselineLuma + 55))?"}
-    L2_Glare -->|"Any condition triggered\n(Self-Reflected LED Light!)"| HoldReflect["🛡️ BLOCK REFLECTION TURN-OFF\n(GUARD: REFLECTION_GUARD_HOLD)"]
+    L2_Glare -->|"Any condition triggered\n(Self-Reflected LED Light!)"| HoldReflect["[BLOCK REFLECTION TURN-OFF]\n(GUARD: REFLECTION_GUARD_HOLD)"]
 
     L2_Glare -->|"All 3 passed\n(True Ambient Room Recovery)"| L3_MinHold{"Layer 3B: Held ON >= 12,000ms\nAND sustained bright recovery >= 3,000ms?"}
-    L3_MinHold -->|"Not yet 12s or < 3s"| HoldTime["⏳ WAIT FOR MINIMUM HOLD DURATION\n(GUARD: MIN_HOLD_COOLDOWN)"]
-    L3_MinHold -->|"Elapsed >= 12s & >= 3s"| ActionOff["🌑 AUTO TURN OFF TORCH (TURN_OFF)\nRecord cycle in 30s rolling window\n(If >= 2 cycles/30s -> Engage 60s Latch)"]
+    L3_MinHold -->|"Not yet 12s or < 3s"| HoldTime["[MINIMUM HOLD COOLDOWN]\n(GUARD: MIN_HOLD_COOLDOWN)"]
+    L3_MinHold -->|"Elapsed >= 12s & >= 3s"| ActionOff["[AUTO TURN OFF TORCH: TURN_OFF]\nRecord cycle in 30s rolling window\n(If >= 2 cycles/30s -> Engage 60s Latch)"]
 ```
 
-### 4.3. Detailed State Machine of the `hasMovedSinceManualOff` Relocation Latch (`Ticket 12`)
+### 4.3. Detailed State Machine of the `hasMovedSinceManualOff` Relocation Latch
 
 Why is a persistent boolean latch **`hasMovedSinceManualOff`** required instead of checking instantaneous motion only at $t \ge 2500\text{ms}$?
 - In practice, after double-tapping to turn off the torch at $t = 0\text{ms}$, a user typically walks or runs to a new dark spot during $t \in [600\text{ms}, 2000\text{ms}]$ and **stops moving** at $t = 2000\text{ms}$ to aim the camera at a banknote.
@@ -263,12 +263,12 @@ Why is a persistent boolean latch **`hasMovedSinceManualOff`** required instead 
 ```mermaid
 stateDiagram-v2
     [*] --> AUTO_ARMED
-    AUTO_ARMED: 🟢 AUTO_ARMED\nisManualOverride = false, isTorchOn = false\nReady to auto-turn ON if < 25 lux for 1.0s
-    TORCH_ON_AUTO: 🔥 TORCH_ON_AUTO\nisTorchOn = true, isManualOverride = false\nProtected by 4-Layer Anti-Strobe Guard
-    SETTLE_DRAIN: ⏳ MANUAL_OFF_SETTLING (0..250ms)\nisManualOverride = true, isTorchOn = false\nDrains 1–3 residual bright LED frames in ImageReader FIFO
-    TAP_JITTER_GUARD: 🛡️ TAP_JITTER_GUARD (250..400ms)\nCaptures manualOffBaselineLuma\nIgnores mechanical finger vibration from double-tap
-    DARK_STATIONARY: 🌑 DARK_STATIONARY (> 400ms)\nhasMovedSinceManualOff = false\nHolding still at same dark spot -> Stays OFF indefinitely
-    DARK_MOVED_LATCHED: 🏃 DARK_MOVED_LATCHED (> 400ms)\nhasMovedSinceManualOff = true\n(Walked ΔY>=4.5 / Δa>=0.35 or darkened >=6 lux)
+    AUTO_ARMED: [AUTO_ARMED]\nisManualOverride = false, isTorchOn = false\nReady to auto-turn ON if < 25 lux for 1.0s
+    TORCH_ON_AUTO: [TORCH_ON_AUTO]\nisTorchOn = true, isManualOverride = false\nProtected by 4-Layer Anti-Strobe Guard
+    SETTLE_DRAIN: [MANUAL_OFF_SETTLING] (0..250ms)\nisManualOverride = true, isTorchOn = false\nDrains 1–3 residual bright LED frames in ImageReader FIFO
+    TAP_JITTER_GUARD: [TAP_JITTER_GUARD] (250..400ms)\nCaptures manualOffBaselineLuma\nIgnores mechanical finger vibration from double-tap
+    DARK_STATIONARY: [DARK_STATIONARY] (> 400ms)\nhasMovedSinceManualOff = false\nHolding still at same dark spot -> Stays OFF indefinitely
+    DARK_MOVED_LATCHED: [DARK_MOVED_LATCHED] (> 400ms)\nhasMovedSinceManualOff = true\n(Walked ΔY>=4.5 / Δa>=0.35 or darkened >=6 lux)
 
     AUTO_ARMED --> TORCH_ON_AUTO: < 25 lux continuously >= 1000ms
     TORCH_ON_AUTO --> SETTLE_DRAIN: User Double-Taps Torch OFF\n(handleManualToggle(false, now))
@@ -292,9 +292,9 @@ Related source files: [`src/services/camera/AdaptivePowerGovernor.ts`](file:///c
 ```mermaid
 stateDiagram-v2
     [*] --> BURST
-    BURST: 🔥 BURST (Active Scanning)\n• TFLite Interval: 130ms (~7.7 FPS)\n• Camera2 AE FPS: [15, 24]\n• Preview Alpha: 0.22\n• EdgePulseBorder: 60 FPS Breathing Animation
-    ECO: 🌿 ECO (Steady Hold Power Saving)\n• TFLite Interval: 650ms (~1.5 FPS)\n• Camera2 AE FPS: [10, 15]\n• Preview Alpha: 0.08\n• EdgePulseBorder: Animation Paused (static opacity = 0.85)
-    HIBERNATION: 💤 HIBERNATION (Deep Standby)\n• TFLite: 0 FPS (Completely suspended)\n• Camera2: stopRepeating() + 1500ms/3000ms single-frame heartbeat\n• Preview Alpha: 0.00 (True OLED Black)\n• Screen Brightness: 0.01f (Clears KEEP_SCREEN_ON after 180s)\n• Thermal Cutoff: Auto-turns off idle Auto-Torch after 15s / 4s pocket
+    BURST: [BURST] (Active Scanning)\n• TFLite Interval: 130ms (~7.7 FPS)\n• Camera2 AE FPS: [15, 24]\n• Preview Alpha: 0.22\n• EdgePulseBorder: 60 FPS Breathing Animation
+    ECO: [ECO] (Steady Hold Power Saving)\n• TFLite Interval: 650ms (~1.5 FPS)\n• Camera2 AE FPS: [10, 15]\n• Preview Alpha: 0.08\n• EdgePulseBorder: Animation Paused (static opacity = 0.85)
+    HIBERNATION: [HIBERNATION] (Deep Standby)\n• TFLite: 0 FPS (Completely suspended)\n• Camera2: stopRepeating() + 1500ms/3000ms single-frame heartbeat\n• Preview Alpha: 0.00 (True OLED Black)\n• Screen Brightness: 0.01f (Clears KEEP_SCREEN_ON after 180s)\n• Thermal Cutoff: Auto-turns off idle Auto-Torch after 15s / 4s pocket
 
     BURST --> ECO: Locked banknote & held steady (ΔY < 2.5) >= 2.5s\nOR Empty static frame (ΔY < 2.0) >= 2.5s
     ECO --> BURST: Optical motion (ΔY >= 4.5)\nOR IMU pickup acceleration (Δa >= 0.35 m/s²)\nOR Candidate silhouette / Withdrawal / Screen Touch
@@ -305,14 +305,25 @@ stateDiagram-v2
 ### 5.2. Single-Pass Y-Plane Fusion (`analyzeYPlaneSinglePass`) & `MOTION_BLUR_GATE`
 
 Instead of scanning the Y plane multiple times, [`analyzeYPlaneSinglePass`](file:///c:/Users/ADMIN/NCKH/App_android/src/services/camera/LuminanceAnalyzer.ts) performs **a single sparse-sampled pass** (`< 0.04ms` CPU) to compute simultaneously:
-1. `averageLuma`, `centerLuma`, `borderLuma`, and `glareRatio` for Tickets 08 & 12.
+1. `averageLuma`, `centerLuma`, `borderLuma`, and `glareRatio` for the anti-strobe and manual-off recovery torch controllers.
 2. **A $16 \times 16 = 256$-cell luminance grid (`lumaGrid`)** and the mean absolute temporal frame difference:
    $$\Delta Y = \frac{1}{256} \sum_{k=0}^{255} \left| G_t[k] - G_{t-1}[k] \right|$$
 3. **Motion-Blur Gate (`MOTION_BLUR_GATE`, $\Delta Y > 32.0$)**:
    - When the user waves their hand or pans the phone rapidly ($\Delta Y > 32.0$), the camera frame suffers severe motion blur.
    - The governor keeps the state in `BURST` but **sets `shouldRunInference = false` for that blurred frame** and **skips feeding a false `EMPTY` into `TemporalDebounceFilter`**, saving 100% of wasted CPU/NPU cycles while preserving any already-locked banknote state inside the 5-frame window!
 
-### 5.3. Zero-Permission Multi-Sensor Wake-Up & Adaptive IMU Table-Vibration Guard (`0.35 -> 0.65 m/s²`)
+### 5.3. Eco Mode Hardening: 350ms Deadband Hysteresis, Hand-Tremor Filtering & False Negative Guard
+
+To prevent spurious drops out of `ECO` back to `BURST` during real-world handheld operation:
+1. **Eco Mode Deadband Hysteresis (`ecoMotionSpikeStartMs = 350ms`)**:
+   - When in `ECO`, optical motion falling in the deadband between steady holding and deliberate re-framing (`STATIC_HOLDING_DELTA_Y_THRESHOLD < motionDeltaY < MOTION_WAKE_DELTA_Y_THRESHOLD = 4.5`) arms a 350ms persistence timer.
+   - Motion must persist continuously for $\ge 350\text{ms}$ before exiting `ECO` to `BURST`. Transient finger twitches or minor angular adjustments $< 350\text{ms}$ are absorbed. Decisive intentional movements ($\Delta Y \ge 4.5$) continue to wake to `BURST` instantaneously in 1 frame ($< 15\text{ms}$).
+2. **Blind User Hand-Tremor IMU Filter (`0.65 m/s²`)**:
+   - In `MoneyCameraView.kt`, once banknotes are confirmed and locked (`hasConfirmedMoney == true`), the IMU wake threshold is dynamically elevated from `0.35 m/s²` to **`0.65 m/s²`** (`IMU_WAKE_DELTA_A_TABLE`). This filters out micro hand tremors when visually impaired users hold cash steady in front of the lens.
+3. **AI Single-Frame False-Negative Guard (`effectiveConsecutiveEmpty = 0`)**:
+   - In [`useMoneyState.ts`](file:///c:/Users/ADMIN/NCKH/App_android/src/hooks/useMoneyState.ts), when the detection state is `STABLE` and cash is held stationary (`motionDeltaY < STATIC_HOLDING_DELTA_Y_THRESHOLD`), if the YOLO detector encounters a 1-frame false negative dropout, the system passes `effectiveConsecutiveEmpty = 0` to the power governor instead of falsely triggering `WITHDRAWAL_TRANSITION`, preserving `ECO` power savings.
+
+### 5.4. Zero-Permission Multi-Sensor Wake-Up & Adaptive IMU Table-Vibration Guard (`0.35 -> 0.65 m/s²`)
 
 During `HIBERNATION`, continuous Camera2 frame streaming is halted via `captureSession.stopRepeating()` to power down the hardware ISP. To wake the pipeline instantaneously (`< 30ms`) as soon as the user picks up the phone without waiting for the `1500ms` heartbeat:
 - The system registers 3 **Zero-Permission** hardware sensors (requiring zero declarations in `AndroidManifest.xml`): `Sensor.TYPE_LINEAR_ACCELERATION` (or `TYPE_ACCELEROMETER`), `Sensor.TYPE_PROXIMITY`, and `Sensor.TYPE_LIGHT`.
@@ -320,7 +331,7 @@ During `HIBERNATION`, continuous Camera2 frame streaming is halted via `captureS
   - The default IMU wake threshold is $\Delta a \ge 0.35\text{ m/s}^2$.
   - If the phone rests on a table vibrating from a desk fan or idling vehicle engine ($\Delta a \approx 0.40\text{–}0.50\text{ m/s}^2$) and triggers 3 consecutive IMU wake-ups without any corresponding optical scene change ($\Delta Y < 1.2$), `AdaptivePowerGovernor` automatically raises the IMU wake threshold to **`0.65 m/s²`** (`IMU_WAKE_DELTA_A_ADAPTIVE_TABLE`), eliminating false table-vibration wake-ups! As soon as real optical motion occurs ($\Delta Y \ge 4.5$), the threshold resets to `0.35 m/s²`.
 
-### 5.4. Hardware Thermal & Battery Duty-Cycle Scaling Table (Android 9–14 / API 28–34)
+### 5.5. Hardware Thermal & Battery Duty-Cycle Scaling Table (Android 9–14 / API 28–34)
 
 Combines `PowerManager.getCurrentThermalStatus()` (API 29+) and `BatteryManager.EXTRA_TEMPERATURE` / `EXTRA_LEVEL` / `isPowerSaveMode()` (supported down to Android 9.0 API 28):
 
@@ -332,7 +343,7 @@ Combines `PowerManager.getCurrentThermalStatus()` (API 29+) and `BatteryManager.
 
 ---
 
-## 6. Subsystem 5: Offline Vietnamese Audio Pipeline, Multi-Note Upgrade Preemption & Wallet Readout Lock (`SmartPreemptionController` — Ticket 13)
+## 6. Subsystem 5: Offline Vietnamese Audio Pipeline, Multi-Note Upgrade Preemption & Wallet Readout Lock (`SmartPreemptionController`)
 
 Related source files: [`src/services/audio/audioRegistry.ts`](file:///c:/Users/ADMIN/NCKH/App_android/src/services/audio/audioRegistry.ts), [`AudioQueueManager.ts`](file:///c:/Users/ADMIN/NCKH/App_android/src/services/audio/AudioQueueManager.ts), [`SmartPreemptionController.ts`](file:///c:/Users/ADMIN/NCKH/App_android/src/services/audio/SmartPreemptionController.ts), [`MoneyAudioModule.kt`](file:///c:/Users/ADMIN/NCKH/App_android/android/app/src/main/java/com/nckh/moneyvision/audio/MoneyAudioModule.kt), and `MoneyAudioModule.java`.
 
@@ -354,31 +365,31 @@ flowchart TD
     Event["Stable Banknote State Update\nhandleDetectionUpdate(items, now)"] --> CheckWalletLock{"Currently Reading Session Wallet?\n(isReadingWallet == true)"}
 
     CheckWalletLock -->|"Yes (Wallet Summary in progress)"| WalletProtect{"Are items empty or non-empty?"}
-    WalletProtect -->|"Empty (User lowered hand holding cash\nwhile listening to Wallet Summary)"| SilentEmptyState["🛡️ WALLET READOUT PROTECTION LOCK\nUpdate hadMoneyInLastFrame = false,\nlastAnnouncedSignature = 'EMPTY'\nNEVER call stop() & NEVER play empty.wav!"]
-    WalletProtect -->|"Non-Empty"| SavePendingWallet["🛡️ WALLET READOUT PROTECTION LOCK\nSave pendingDetection = activeItems\nNEVER interrupt active Wallet Summary speech!"]
+    WalletProtect -->|"Empty (User lowered hand holding cash\nwhile listening to Wallet Summary)"| SilentEmptyState["[WALLET READOUT PROTECTION LOCK]\nUpdate hadMoneyInLastFrame = false,\nlastAnnouncedSignature = 'EMPTY'\nNEVER call stop() & NEVER play empty.wav!"]
+    WalletProtect -->|"Non-Empty"| SavePendingWallet["[WALLET READOUT PROTECTION LOCK]\nSave pendingDetection = activeItems\nNEVER interrupt active Wallet Summary speech!"]
 
     CheckWalletLock -->|"No (Standard scanning mode)"| IsEmpty{"Is Frame Empty?\n(items.length == 0)"}
 
     IsEmpty -->|"Yes (User just withdrew banknotes)"| HadMoney{"Did previous frame have money\nor is money speech currently playing?"}
     HadMoney -->|"No"| IgnoreEmpty["Ignore (Do not repeat empty.wav)"]
-    HadMoney -->|"Yes"| HardStop["🛑 INSTANT WITHDRAWAL PREEMPTION (HARD STOP)\n1. Clear pendingDetection = null, currentlyAnnouncingNotesCount = 0\n2. queueManager.stop() (Cut off in-flight money speech immediately)\n3. Vibrate 50ms + Play 'empty.wav' earcon"]
+    HadMoney -->|"Yes"| HardStop["[INSTANT WITHDRAWAL PREEMPTION: HARD STOP]\n1. Clear pendingDetection = null, currentlyAnnouncingNotesCount = 0\n2. queueManager.stop() (Cut off in-flight money speech immediately)\n3. Vibrate 50ms + Play 'empty.wav' earcon"]
 
     IsEmpty -->|"No (Banknotes Present: M_new)"| SameSig{"Is M_new == M_lastAnnounced\nOR a transient downward subset of announced Peak?\n(e.g., {50k: 2} -> {50k: 1} -> {50k: 2})"}
-    SameSig -->|"Yes"| Suppress["🤫 COOLDOWN & DOWNWARD-FLICKER SUPPRESSION\nDo not announce 1-note drop during partial occlusion\nand do not repeat 2-note speech when 2nd note reappears!"]
+    SameSig -->|"Yes"| Suppress["[COOLDOWN & DOWNWARD-FLICKER SUPPRESSION]\nDo not announce 1-note drop during partial occlusion\nand do not repeat 2-note speech when 2nd note reappears!"]
 
     SameSig -->|"No (New banknote state)"| SpeakingCheck{"Is previous money utterance\ncurrently speaking?"}
 
     SpeakingCheck -->|"Currently Speaking"| UpgradeCheck{"Did total note count INCREASE?\n(newTotalNotes > currentlyAnnouncingNotesCount)\ne.g., Speaking 1 note -> 2nd note converges"}
-    UpgradeCheck -->|"Yes (Upgrade 1 -> 2+ notes)"| UpgradePreempt["⚡ IMMEDIATE MULTI-NOTE UPGRADE PREEMPTION\n1. queueManager.stop() (Abort outdated 1-note utterance)\n2. Update currentlyAnnouncingNotesCount = newTotalNotes\n3. Immediately speak upgraded multi-note total ('Hai tờ ...')!"]
-    UpgradeCheck -->|"No (Same count / Single-note swap)"| QueueLatest["📥 SOFT PREEMPTION (COALESCE LATEST)\nSet pendingDetection = activeItems\nWait for current sentence to finish -> Speak pendingDetection!"]
+    UpgradeCheck -->|"Yes (Upgrade 1 -> 2+ notes)"| UpgradePreempt["[IMMEDIATE MULTI-NOTE UPGRADE PREEMPTION]\n1. queueManager.stop() (Abort outdated 1-note utterance)\n2. Update currentlyAnnouncingNotesCount = newTotalNotes\n3. Immediately speak upgraded multi-note total ('Hai tờ ...')!"]
+    UpgradeCheck -->|"No (Same count / Single-note swap)"| QueueLatest["[SOFT PREEMPTION: COALESCE LATEST]\nSet pendingDetection = activeItems\nWait for current sentence to finish -> Speak pendingDetection!"]
 
-    SpeakingCheck -->|"Idle"| PlayNow["🔊 PLAY IMMEDIATELY\n1. Record presentationPeakAnnouncedCounts & currentlyAnnouncingNotesCount\n2. Trigger top denomination haptic pattern + Play ['tick', ...clips]"]
+    SpeakingCheck -->|"Idle"| PlayNow["[PLAY IMMEDIATELY]\n1. Record presentationPeakAnnouncedCounts & currentlyAnnouncingNotesCount\n2. Trigger top denomination haptic pattern + Play ['tick', ...clips]"]
 ```
 
-### 6.3. Three Core Audio Protection Mechanisms (`Ticket 13`)
+### 6.3. Three Core Audio Protection Mechanisms
 
 1. **Wallet Readout Protection Lock (`isReadingWallet`)**:
-   - When a blind user performs a 1-second `Long Press` (`handleLongPress`) or taps the **`👛 VÍ TÍCH LŨY`** card to hear their accumulated wallet total, their natural reflex is to **lower the hand holding the banknotes** while listening.
+   - When a blind user performs a 1-second `Long Press` (`handleLongPress`) or taps the **`[VÍ TÍCH LŨY]`** card to hear their accumulated wallet total, their natural reflex is to **lower the hand holding the banknotes** while listening.
    - Lowering the hand causes the camera to emit `EMPTY` after 3 frames (`~390ms`). Because `isReadingWallet = true` is held across the entire wallet playback sequence (`try / finally` in TypeScript and `CompletionCallback` in `MoneyAudioModule.playSequence` in `MainActivity.java`), camera updates only synchronize background state variables and **never call `stop()` or play `empty.wav`**, ensuring the wallet summary finishes uninterrupted.
 2. **Immediate Multi-Note Upgrade Preemption (`Multi-Note Upgrade Preemption`)**:
    - When holding two `50,000₫` notes, if Note #1 converges first (`t = 0.5s`) and begins speaking *"Năm mươi nghìn"*, and `200ms` later Note #2 converges (`newTotalNotes = 2 > currentlyAnnouncingNotesCount = 1`), the controller **immediately aborts the partial 1-note utterance** and speaks *"Hai tờ năm mươi nghìn"*. This prevents the user from hearing two separate consecutive announcements (*"Năm mươi nghìn"* followed by *"Hai tờ năm mươi nghìn"*), which would otherwise sound like 3 notes (`150,000₫`).

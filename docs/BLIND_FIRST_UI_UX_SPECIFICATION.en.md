@@ -1,10 +1,10 @@
 # Blind-First UI/UX & TalkBack Accessibility Specification
 
-> 🌐 **Language / Ngôn ngữ:** [🇻🇳 Tiếng Việt](file:///c:/Users/ADMIN/NCKH/App_android/docs/BLIND_FIRST_UI_UX_SPECIFICATION.md) | **🇬🇧 English (Current)**
+> **Language / Ngôn ngữ:** [Tiếng Việt](BLIND_FIRST_UI_UX_SPECIFICATION.md) | **English (Current)**
 >
 > **Project:** **MoneyVision** (`com.nckh.moneyvision`)  
 > **Author & Independent Owner:** **Nguyễn Quang Toàn** (`© 2026 Nguyễn Quang Toàn - Sở hữu & Phát triển độc lập`)  
-> **Document Scope:** Architectural specification of the WCAG AAA+ Low-Vision HUD, Two-Handed Physical Ergonomics (`Per-Pointer 16dp Edge Palm-Rejection`), Full-Screen Multi-Touch Gesture State Machine, Dual-Mode Google TalkBack Compatibility (`Explore-by-Touch` & `Zero Talk-Over`), Multi-Tier Tactile Vocabulary (`25ms` Spatial Guidance + 9-Denomination Tactile Coding), and Multi-Note / Wallet Readout Lock / Smart Torch Recovery UX (`Tickets 12 & 13`).
+> **Document Scope:** Architectural specification of the WCAG AAA+ Low-Vision HUD, Two-Handed Physical Ergonomics (`Per-Pointer 16dp Edge Palm-Rejection`), Full-Screen Multi-Touch Gesture State Machine, Dual-Mode Google TalkBack Compatibility (`Explore-by-Touch` & `Zero Talk-Over`), Multi-Tier Tactile Vocabulary (`25ms` Spatial Guidance + 9-Denomination Tactile Coding), and Multi-Note / Wallet Readout Lock / Smart Torch Recovery UX.
 
 ---
 
@@ -28,8 +28,8 @@ flowchart TD
         L1["Layer 1 (Bottom - z=0): CameraViewport (TextureView / PreviewView)\n• importantForAccessibility = 'no-hide-descendants'\n• Dynamic opacity scaled by PowerState:\n  - BURST: alpha = 0.22 (Minimizes photophobic glare)\n  - ECO: alpha = 0.08 (Reduces GPU alpha-blending power)\n  - HIBERNATION: alpha = 0.00 (True OLED Black 0mW)"]
         L2["Layer 2 (z=1): EdgePulseBorder (8dp #FFE600 Breathing Perimeter Frame)\n• pointerEvents = 'none'\n• BURST + Money Present: Oscillates 0.35 <-> 1.0 (1200ms cycle)\n• ECO + Money Present: Static opacity = 0.85 (0% CPU Animation)\n• HIBERNATION / Empty Frame: opacity = 0.0"]
         L3["Layer 3 (z=2): Full-Screen Gesture Surface (GestureCanvas / rootPulseContainer)\n• Captures 1-Tap, 2-Tap, 1s Long-Press, 2-Finger Double-Tap\n• Filters 16dp bezel palm/thumb contact per pointer (Per-Pointer)\n• Attaches View.AccessibilityDelegate & View.OnHoverListener for TalkBack"]
-        L4["Layer 4 (z=3): Low-Vision HUD & Direct Accessible Controls (TactileDisplay)\n• Header Bar: Author Attribution (Nguyễn Quang Toàn) | 🛠️ Kiểm thử | ℹ️ Tác giả\n• Status Bar: Power State Badge (🔍/🌿/💤) | 🔦 ĐÈN Button (>= 44dp)\n• 4-Corner L-Shaped Viewfinder Reticle\n• 64sp Monospace Hero Denomination + Polymer/Cotton Color Badge\n• 👛 VÍ TÍCH LŨY Card (>= 48dp) & 🔄 XÓA VÍ Button (>= 44dp)"]
-        L5["Layer 5 (Top - z=4): Developer Test Drawer (SimulationControls) & AuthorModal\n• SimulationControls is COLLAPSED BY DEFAULT (isOpen = false / View.GONE)\n• Only expands when a developer explicitly taps 🛠️ Kiểm thử"]
+        L4["Layer 4 (z=3): Low-Vision HUD & Direct Accessible Controls (TactileDisplay)\n• Header Bar: Author Attribution (Nguyễn Quang Toàn) | [KIỂM THỬ] | [TÁC GIẢ]\n• Status Bar: Power State Badge (ĐANG QUÉT/ECO/CHỜ) | Nút [ĐÈN PIN] (>= 44dp)\n• 4-Corner L-Shaped Viewfinder Reticle\n• 64sp Monospace Hero Denomination + Polymer/Cotton Color Badge\n• Thẻ [VÍ TÍCH LŨY] (>= 48dp) & Nút [XÓA VÍ] (>= 44dp)"]
+        L5["Layer 5 (Top - z=4): Developer Test Drawer (SimulationControls) & AuthorModal\n• SimulationControls is COLLAPSED BY DEFAULT (isOpen = false / View.GONE)\n• Only expands when a developer explicitly taps [KIỂM THỬ]"]
     end
 
     L1 --> L2 --> L3 --> L4 --> L5
@@ -49,7 +49,7 @@ All color constants, typography tokens, and denomination visual specs are centra
 | **Primary Text & Border (`primaryYellow`)** | `#FFE600` | `#000000` | **`16.74 : 1`** (AAA) | ~575nm wavelength maximally stimulates both L and M cones in low-vision retinas. |
 | **Secondary Text & Labels (`secondaryWhite`)** | `#FFFFFF` | `#000000` | **`21.00 : 1`** (AAA) | Maximum theoretical contrast for copyright attribution and guidance subtitles. |
 | **Torch Active / Locked (`statusTorchOn`)** | `#00FF66` | `#000000` | **`15.86 : 1`** (AAA) | Signals active LED flashlight or a locked 4/5-frame banknote consensus. |
-| **Alert / Reset Wallet (`alertRed`)** | `#FF3B30` | `#000000` | **`5.89 : 1`** (AA Large) | Borders the `🔄 XÓA VÍ` button so low-vision users distinguish reset from wallet readout. |
+| **Alert / Reset Wallet (`alertRed`)** | `#FF3B30` | `#000000` | **`5.89 : 1`** (AA Large) | Borders the `[XÓA VÍ]` button so low-vision users distinguish reset from wallet readout. |
 
 ### 2.2. 4-Corner L-Shaped Viewfinder Reticle (`testID="viewfinder-reticle"`)
 
@@ -58,9 +58,9 @@ In [`TactileDisplay.tsx`](file:///c:/Users/ADMIN/NCKH/App_android/src/components
 ```mermaid
 stateDiagram-v2
     [*] --> IDLE_SEARCH
-    IDLE_SEARCH: ⚪ IDLE SEARCH\nCorner Brackets: #555555 / Dim #FFE600\n64sp Hero Text: "ĐƯA TIỀN VÀO"\nSubtitle: "Hold banknote 12–20cm from rear camera"
-    CANDIDATE_HINT: 🟡 CANDIDATE SILHOUETTE DETECTED (0.28 <= score < 0.50 or STABILIZING)\nCorner Brackets: #FFE600 (Bright Solar Yellow)\nEmits 25ms spatial guidance vibration pulse\nStatus: "✋ Phát hiện bóng tờ tiền — Giữ yên tay..."
-    LOCKED_STABLE: 🟢 DENOMINATION LOCKED (>= 4/5 Frame Consensus)\nCorner Brackets: #00FF66 (Neon Green) or Denomination Accent Color\n64sp Hero Text: "500.000 đ"\nRenders Polymer/Cotton Color Badge + Plays Voice & Tactile Morse Code
+    IDLE_SEARCH: [IDLE_SEARCH]\nCorner Brackets: #555555 / Dim #FFE600\n64sp Hero Text: "ĐƯA TIỀN VÀO"\nSubtitle: "Hold banknote 12–20cm from rear camera"
+    CANDIDATE_HINT: [CANDIDATE_HINT] (0.28 <= score < 0.50 or STABILIZING)\nCorner Brackets: #FFE600 (Bright Solar Yellow)\nEmits 25ms spatial guidance vibration pulse\nStatus: "Phát hiện bóng tờ tiền — Giữ yên tay..."
+    LOCKED_STABLE: [LOCKED_STABLE] (>= 4/5 Frame Consensus)\nCorner Brackets: #00FF66 (Neon Green) or Denomination Accent Color\n64sp Hero Text: "500.000 đ"\nRenders Polymer/Cotton Color Badge + Plays Voice & Tactile Morse Code
 
     IDLE_SEARCH --> CANDIDATE_HINT: candidateHint == true or STABILIZING
     CANDIDATE_HINT --> IDLE_SEARCH: Banknote leaves frame before 4/5 consensus\n(Automatically clears guidance text back to IDLE)
@@ -87,9 +87,9 @@ Defined in [`src/constants/theme.ts`](file:///c:/Users/ADMIN/NCKH/App_android/sr
 ### 2.4. Power State Badge (`testID="power-state-badge"`)
 
 Gives low-vision users and sighted companions immediate visibility into the 3-Tier Adaptive Power Governor ([`formatPowerStateBadge`](file:///c:/Users/ADMIN/NCKH/App_android/src/constants/theme.ts)):
-- **`🔍 ĐANG QUÉT`** (`#00FF66` — `BURST 130ms` active scanning): Hand/scene motion or active banknote verification.
-- **`🌿 ECO`** (`#FFE600` — `ECO 650ms` power saving): Banknote already announced and held steady, or static scene $> 2.5\text{s}$.
-- **`💤 CHỜ`** (`#9E9E9E` — `HIBERNATION 1500ms/3000ms` deep standby): Phone resting on a table or inside a pocket $> 8\text{s}$.
+- **`[ĐANG QUÉT]`** (`#00FF66` — `BURST 130ms` active scanning): Hand/scene motion or active banknote verification.
+- **`[ECO]`** (`#FFE600` — `ECO 650ms` power saving): Banknote already announced and held steady, or static scene $> 2.5\text{s}$.
+- **`[CHỜ]`** (`#9E9E9E` — `HIBERNATION 1500ms/3000ms` deep standby): Phone resting on a table or inside a pocket $> 8\text{s}$.
 
 ---
 
@@ -103,7 +103,7 @@ When a blind user counts banknotes in the real world:
 
 Without dedicated ergonomic filtering, two critical failures occur:
 1. **Accidental Simulation Button Triggers**: If a 15-button debug panel (`1K`..`500K`) sits exposed at the bottom of the screen, the user's palm presses fake denominations during real cash transactions.
-   - **Solution**: `SimulationControls` is collapsed by default (`isSimulationDrawerOpen = false` in [`App.tsx`](file:///c:/Users/ADMIN/NCKH/App_android/App.tsx) and `controlsPanel.setVisibility(View.GONE)` in `MainActivity.java`). It only opens when a developer taps the compact **`🛠️ Kiểm thử`** header button (`testID="toggle-simulation-drawer-btn"`).
+   - **Solution**: `SimulationControls` is collapsed by default (`isSimulationDrawerOpen = false` in [`App.tsx`](file:///c:/Users/ADMIN/NCKH/App_android/App.tsx) and `controlsPanel.setVisibility(View.GONE)` in `MainActivity.java`). It only opens when a developer taps the compact **`[KIỂM THỬ]`** header button (`testID="toggle-simulation-drawer-btn"`).
 2. **Multi-Touch Gesture Corruption from Bezel Grip**: When the gripping thumb rests on the screen edge (Pointer #0 at $x = 6\text{px}$) while the index finger taps the center of the screen to re-read a banknote (Pointer #1 at $x = 200\text{px}$), Android reports `pointerCount = 2`. A naive gesture detector misinterprets this as a 2-finger gesture or cancels the single tap!
 
 ### 3.2. Per-Pointer Safe-Zone Filtering Algorithm
@@ -137,8 +137,8 @@ The [`GestureRecognizer`](file:///c:/Users/ADMIN/NCKH/App_android/src/utils/gest
 | Gesture (`GestureAction`) | Physical Action | Technical Thresholds | System Action & Multi-Modal Feedback |
 | :--- | :--- | :--- | :--- |
 | **`SINGLE_TAP`** | 1-finger tap & release | Hold $< 1000\text{ms}$, drift $\le 40\text{px}$, no 2nd tap within $300\text{ms}$. | **Re-read current detection** (bypasses the $1.5\text{s}$ cooldown). If empty, speaks *"Không có tiền trong tầm quét"* (*"No banknote in scanning range"*). |
-| **`DOUBLE_TAP`** | 1-finger rapid double tap | Inter-tap interval $\le 300\text{ms}$ (`doubleTapThresholdMs`). | **Manual Flashlight Toggle** (`isManualOverride = true`), plays `torch_on.wav` / `torch_off.wav` + double haptic pulse `[0, 40, 60, 40]`. When manually turned OFF, Auto-Torch automatically re-arms via **2 smart recovery paths** (entering $\ge 35\text{ lux}$ indoor light or relocating in darkness after $\ge 2.5\text{s}$ — Ticket 12). |
-| **`LONG_PRESS`** | 1-finger steady hold | Continuous hold $\ge 1000\text{ms}$ (`longPressThresholdMs`), drift $\le 40\text{px}$. | **Read Accumulated Session Wallet** (`SessionWalletState`) + `200ms` deep haptic vibration. Engages **`isReadingWallet = true`** protection lock so lowering the hand (`EMPTY` frame) never cuts off wallet speech (Ticket 13). |
+| **`DOUBLE_TAP`** | 1-finger rapid double tap | Inter-tap interval $\le 300\text{ms}$ (`doubleTapThresholdMs`). | **Manual Flashlight Toggle** (`isManualOverride = true`), plays `torch_on.wav` / `torch_off.wav` + double haptic pulse `[0, 40, 60, 40]`. When manually turned OFF, Auto-Torch automatically re-arms via **2 smart recovery paths** (entering $\ge 35\text{ lux}$ indoor light or relocating in darkness after $\ge 2.5\text{s}$). |
+| **`LONG_PRESS`** | 1-finger steady hold | Continuous hold $\ge 1000\text{ms}$ (`longPressThresholdMs`), drift $\le 40\text{px}$. | **Read Accumulated Session Wallet** (`SessionWalletState`) + `200ms` deep haptic vibration. Engages **`isReadingWallet = true`** protection lock so lowering the hand (`EMPTY` frame) never cuts off wallet speech. |
 | **`TWO_FINGER_DOUBLE_TAP`** | 2-finger rapid double tap | Two 2-finger taps within $\le 350\text{ms}$ (`twoFingerDoubleTapThresholdMs`), each hold $< 500\text{ms}$, drift $\le 40\text{px}$. | **Reset Session Wallet to `0 ₫`**, plays `wallet_reset.wav` + warning haptic cadence `[0, 60, 50, 60, 50, 120]`. |
 
 ```mermaid
@@ -189,7 +189,7 @@ sequenceDiagram
     actor User as Blind User (Google TalkBack ON)
     participant TB as Android TalkBack OS\n(TouchExploration)
     participant Canvas as rootPulseContainer / GestureCanvas\n(AccessibilityDelegate + OnHoverListener)
-    participant Buttons as Direct Accessible Buttons (>= 44dp)\n(🔦 ĐÈN | 👛 VÍ | 🔄 XÓA VÍ)
+    participant Buttons as Direct Accessible Buttons (>= 44dp)\n([ĐÈN PIN] | [VÍ TÍCH LŨY] | [XÓA VÍ])
     participant Audio as MoneyAudioModule\n(MP3/WAV + AudioFocus + Interrupt)
 
     rect rgb(25, 35, 50)
@@ -209,7 +209,7 @@ sequenceDiagram
 
     rect rgb(45, 30, 45)
     Note over User,Audio: Scenario C: Swiping to Direct >= 44dp Buttons or Opening TalkBack Actions Menu
-    User->>TB: Swipes right to focus "🔦 ĐÈN" / "👛 VÍ TÍCH LŨY" / "🔄 XÓA VÍ" & double-taps
+    User->>TB: Swipes right to focus "[ĐÈN PIN]" / "[VÍ TÍCH LŨY]" / "[XÓA VÍ]" & double-taps
     TB->>Buttons: OnClickListener / AccessibilityAction (0x1001..0x1004)
     Buttons->>Audio: Toggles Torch OR Reads Session Wallet OR Resets Wallet to 0₫
     end
@@ -228,10 +228,10 @@ sequenceDiagram
    - Every dynamic text node (`hero-denomination-text`, `detection-summary-text`, `announcement-status-text`) in [`TactileDisplay.tsx`](file:///c:/Users/ADMIN/NCKH/App_android/src/components/TactileDisplay.tsx) sets `accessibilityLiveRegion="none"`, preventing TalkBack from spontaneously interrupting camera scans.
 2. **Separation of Background Gesture Surface (`talkback-gesture-surface`) and Direct Action Buttons ($\ge 44\text{dp}$)**:
    - In [`GestureCanvas.tsx`](file:///c:/Users/ADMIN/NCKH/App_android/src/components/GestureCanvas.tsx), the focusable gesture surface sits as an absolute background layer (`StyleSheet.absoluteFill`), allowing TalkBack users either to activate the main canvas to re-read notes or swipe directly to large action targets:
-     - **`🔦 ĐÈN`** (`testID="torch-toggle-btn"`, `minHeight: 44dp`, `minWidth: 76dp`)
-     - **`👛 VÍ TÍCH LŨY`** (`testID="wallet-card-btn"`, `minHeight: 48dp`)
-     - **`🔄 XÓA VÍ`** (`testID="wallet-reset-btn"`, `minHeight: 44dp`, `minWidth: 92dp`)
-     - **`ℹ️ Tác giả`** (`testID="open-author-modal-btn"`) & **`🛠️ Kiểm thử`** (`testID="toggle-simulation-drawer-btn"`)
+     - **`[ĐÈN PIN]`** (`testID="torch-toggle-btn"`, `minHeight: 44dp`, `minWidth: 76dp`)
+     - **`[VÍ TÍCH LŨY]`** (`testID="wallet-card-btn"`, `minHeight: 48dp`)
+     - **`[XÓA VÍ]`** (`testID="wallet-reset-btn"`, `minHeight: 44dp`, `minWidth: 92dp`)
+     - **`[TÁC GIẢ]`** (`testID="open-author-modal-btn"`) & **`[KIỂM THỬ]`** (`testID="toggle-simulation-drawer-btn"`)
 3. **4 Custom Accessibility Actions in the TalkBack Local Context Menu (`Custom AccessibilityActions`)**:
    - Registered on `AccessibilityNodeInfo` across both Native Android (`A11Y_ACTION_REREAD = 0x1001`, `A11Y_ACTION_TOGGLE_TORCH = 0x1002`, `A11Y_ACTION_READ_WALLET = 0x1003`, `A11Y_ACTION_RESET_WALLET = 0x1004`) and React Native (`accessibilityActions`):
      1. *"Đọc lại mệnh giá tiền hiện tại"* (Re-read current banknote denomination)
@@ -250,7 +250,7 @@ sequenceDiagram
 When a blind user brings a banknote toward the rear camera, the note often enters at an angle or near the frame border before reaching crisp focus for a $\ge 4/5$ frame lock.
 - As soon as the YOLO26 decoder detects an **early candidate silhouette (`0.28 <= score < 0.50` $\rightarrow$ `hasCandidateHint = true`)** or the 5-frame filter enters **`STABILIZING`** (before locking a stable denomination):
   - The system emits a **subtle `25ms` tactile guidance pulse** ([`CANDIDATE_GUIDANCE_PULSE_MS = 25`](file:///c:/Users/ADMIN/NCKH/App_android/src/services/haptics.ts)) rate-limited by a **`1200ms` cooldown** (`CANDIDATE_GUIDANCE_COOLDOWN_MS = 1200`).
-  - The HUD simultaneously displays: **`"✋ Phát hiện bóng tờ tiền — Giữ yên tay..."`** (*"Banknote silhouette detected — Hold hand steady..."*).
+  - The HUD simultaneously displays: **`"Phát hiện bóng tờ tiền — Giữ yên tay..."`** (*"Banknote silhouette detected — Hold hand steady..."*).
   - If the note leaves the frame before reaching 4/5 consensus (`!hasCandidateHint && debounced.state === 'EMPTY'`), `hadCandidateHintRef` / `wasCandidateGuidanceActive` automatically resets the HUD and reticle back to the idle state so guidance text never gets stuck on screen.
 
 ### 6.2. 9-Denomination Tactile Vibration Coding Table (`getDenominationVibrationPattern`)
@@ -282,7 +282,7 @@ flowchart TD
 
 ---
 
-## 7. Multi-Note Scanning UX, Wallet Readout Protection & Smart Torch Recovery (`Tickets 12 & 13`)
+## 7. Multi-Note Scanning UX, Wallet Readout Protection & Smart Torch Recovery
 
 In everyday transactions, blind users frequently hold **2 to 3 banknotes fanned in one hand** to verify change quickly, lower their hand as soon as they long-press to listen to the accumulated wallet total, or double-tap to turn off the flashlight before walking into another dark area. Three core UX mechanisms ensure audio, wallet math, and lighting behave naturally and deterministically:
 
@@ -316,7 +316,7 @@ sequenceDiagram
 
     rect rgb(30, 35, 55)
     Note over User,Audio: Scenario 2: 1-Second Long Press to Read Wallet & Lowering Hand Holding Cash (isReadingWallet Lock)
-    User->>Audio: Long-Presses 1s (or taps "👛 VÍ TÍCH LŨY" card)
+    User->>Audio: Long-Presses 1s (or taps "[VÍ TÍCH LŨY]" card)
     Audio->>Audio: Sets isReadingWallet = true + Vibrates 200ms
     Audio-->>User: Begins reading wallet total: "Hai tờ một trăm nghìn..."
     User->>Cam: Lowers hand holding banknotes to listen -> Camera transitions to EMPTY

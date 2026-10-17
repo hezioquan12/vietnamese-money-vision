@@ -138,16 +138,16 @@ Trong [`yoloDecoder.ts`](file:///c:/Users/ADMIN/NCKH/App_android/src/services/de
 
 Mã nguồn: [`src/services/debounce/TemporalDebounceFilter.ts`](file:///c:/Users/ADMIN/NCKH/App_android/src/services/debounce/TemporalDebounceFilter.ts), [`TemporalDebounceFilter.kt`](file:///c:/Users/ADMIN/NCKH/App_android/android/app/src/main/java/com/nckh/moneyvision/detector/TemporalDebounceFilter.kt) và `MainActivity.java` trong [`scripts/android-sdk-builder.mjs`](file:///c:/Users/ADMIN/NCKH/App_android/scripts/android-sdk-builder.mjs).
 
-Khi người khiếm thị cầm 1 hoặc nhiều tờ tiền trước ống kính, tay có thể rung nhẹ làm 1 frame bị nhòe hoặc các tờ tiền vào khung ngắm lệch nhịp nhau vài trăm mili-giây. Phân hệ này gồm 2 tầng: **Bộ lọc đồng thuận 5 khung hình (`TemporalDebounceFilter`)** và **Bộ đối soát Ví theo Đỉnh Lượt cầm (`PresentationWalletAccumulator` — Ticket 13)**.
+Khi người khiếm thị cầm 1 hoặc nhiều tờ tiền trước ống kính, tay có thể rung nhẹ làm 1 frame bị nhòe hoặc các tờ tiền vào khung ngắm lệch nhịp nhau vài trăm mili-giây. Phân hệ này gồm 2 tầng: **Bộ lọc đồng thuận 5 khung hình (`TemporalDebounceFilter`)** và **Bộ đối soát Ví theo Đỉnh Lượt cầm (`PresentationWalletAccumulator`)**.
 
 ### 3.1. Cơ Chế Cửa Sổ Trượt $N = 5$ & Bỏ Phiếu Đa Số ($\ge 4/5$ Consensus)
 
 ```mermaid
 stateDiagram-v2
     [*] --> EMPTY
-    EMPTY: ⚪ EMPTY\nChữ ký ổn định: "EMPTY"\nKhông có tiền trong khung hình
-    STABILIZING: 🟡 STABILIZING\nĐang tích lũy phiếu bầu trong cửa sổ 5 frame\n(Ví dụ: 1/5, 2/5, 3/5 frame thấy 500k)\n-> Kích hoạt xung dẫn đường 25ms "Giữ yên tay"
-    STABLE: 🟢 STABLE\nĐạt >= 4/5 frame đồng thuận cùng chữ ký\n(Ví dụ: "500000:1" hoặc "100000:2|50000:1")\n-> Chuyển sang PresentationWalletAccumulator & Audio/Haptics
+    EMPTY: [EMPTY]\nChữ ký ổn định: "EMPTY"\nKhông có tiền trong khung hình
+    STABILIZING: [STABILIZING]\nĐang tích lũy phiếu bầu trong cửa sổ 5 frame\n(Ví dụ: 1/5, 2/5, 3/5 frame thấy 500k)\n-> Kích hoạt xung dẫn đường 25ms "Giữ yên tay"
+    STABLE: [STABLE]\nĐạt >= 4/5 frame đồng thuận cùng chữ ký\n(Ví dụ: "500000:1" hoặc "100000:2|50000:1")\n-> Chuyển sang PresentationWalletAccumulator & Audio/Haptics
 
     EMPTY --> STABILIZING: Xuất hiện tiền ở frame mới (1..3/5 phiếu)
     STABILIZING --> EMPTY: >= 3 frame trống liên tiếp (Rút tiền sớm)
@@ -161,7 +161,7 @@ stateDiagram-v2
 2. **Chống Rung Tay 1 Frame (`Jitter Immunity`)**:
    - Giả sử chuỗi 5 frame liên tiếp là: `[500k, 500k, EMPTY (rung tay), 500k, 500k]`. Số phiếu cho `"500000:1"` là $4/5 \ge 4 \rightarrow$ trạng thái vẫn giữ vững là `STABLE` (`500k`), không bị ngắt âm thanh.
 
-### 3.2. Bộ Đối Soát Ví Theo Đỉnh Lượt Cầm (`PresentationWalletAccumulator` — Ticket 13)
+### 3.2. Bộ Đối Soát Ví Theo Đỉnh Lượt Cầm (`PresentationWalletAccumulator`)
 
 #### Tại sao phép trừ giữa 2 frame liền kề (`nextCount - prevCount`) bị cộng dồn thừa khi cầm nhiều tờ tiền?
 Khi người khiếm thị cầm **2 tờ tiền** trên tay, 4 hiện tượng vật lý thực tế thường xuyên xảy ra:
@@ -184,15 +184,15 @@ flowchart TD
 
     WasEmptyCheck -->|"Đúng (Vừa có tiền lại sau EMPTY)"| CheckDropout{"Kiểm tra Nối tiếp Lượt cầm sau Mất frame ngắn:\n1. Δt_empty < PRESENTATION_CONTINUITY_GRACE_MS (1500ms)?\n2. N_new > lastPresentationPeakTotalNotes (Mở rộng lên nhiều tờ)?\n3. Có ít nhất 1 mệnh giá chung với lastPresentationCreditedCounts?\n(Hoặc cùng đúng tờ vừa rớt < 1200ms)"}
 
-    CheckDropout -->|"Đúng (Người dùng chỉnh tay < 1.5s\nđể lộ thêm tờ thứ 2!)"| Uncommit["🔄 HOÀN TÁC & NỐI TIẾP LƯỢT CẦM CŨ\n• Gỡ lastPresentationCreditedCounts khỏi baselineCounts\n• Khôi phục presentationCreditedCounts = lastPresentationCreditedCounts\n• Chuyển sang bước Đối soát liên tục bên dưới!"]
-    CheckDropout -->|"Sai (Lượt cầm tờ tiền mới độc lập,\nví dụ quét tuần tự 1 tờ -> EMPTY -> 1 tờ)"| NewPres["🆕 KHỞI TẠO LƯỢT CẦM MỚI\n• presentationCreditedCounts = clone(newCounts)\n• presentationPeakTotalNotes = N_new"]
+    CheckDropout -->|"Đúng (Người dùng chỉnh tay < 1.5s\nđể lộ thêm tờ thứ 2!)"| Uncommit["[ACTION: HOÀN TÁC & NỐI TIẾP LƯỢT CẦM CŨ]\n• Gỡ lastPresentationCreditedCounts khỏi baselineCounts\n• Khôi phục presentationCreditedCounts = lastPresentationCreditedCounts\n• Chuyển sang bước Đối soát liên tục bên dưới!"]
+    CheckDropout -->|"Sai (Lượt cầm tờ tiền mới độc lập,\nví dụ quét tuần tự 1 tờ -> EMPTY -> 1 tờ)"| NewPres["[ACTION: KHỞI TẠO LƯỢT CẦM MỚI]\n• presentationCreditedCounts = clone(newCounts)\n• presentationPeakTotalNotes = N_new"]
 
     WasEmptyCheck -->|"Sai (Đang trong cùng lượt cầm liên tục)"| Reconcile{"Đối soát M_new với\npresentationCreditedCounts"}
     Uncommit --> Reconcile
 
-    Reconcile -->|"TH1: Tập con / Nhấp nháy (2 -> 1 -> 2)\nMọi d: newCounts[d] <= credited[d]"| CaseSubset["🛡️ GIỮ NGUYÊN ĐỈNH LƯỢT CẦM (Δ = 0)\nKhông cộng trùng khi số tờ tụt tạm thời rồi hồi lại"]
-    Reconcile -->|"TH2: Hiệu chỉnh mệnh giá cùng số tờ >= 2\nN_new == N_credited >= 2 & N_lastActive == N_new\ntrong DENOMINATION_REFINEMENT_WINDOW_MS (1500ms)"| CaseRefine["🔧 HIỆU CHỈNH TẠI CHỖ (IN-PLACE RECONCILE)\npresentationCreditedCounts = clone(newCounts)\n(Ví dụ: {100k:1, 20k:1} -> {100k:1, 50k:1} = 150k, 2 tờ)"]
-    Reconcile -->|"TH3: Mở rộng đỉnh (1 -> 2 tờ hoặc lia A -> B)"| CaseExpand["📈 CẬP NHẬT ĐỈNH MỆNH GIÁ\ncredited[d] = max(credited[d], newCounts[d])\nChỉ cộng đúng phần chênh lệch mở rộng!"]
+    Reconcile -->|"TH1: Tập con / Nhấp nháy (2 -> 1 -> 2)\nMọi d: newCounts[d] <= credited[d]"| CaseSubset["[GUARD: GIỮ NGUYÊN ĐỈNH LƯỢT CẦM (Δ = 0)]\nKhông cộng trùng khi số tờ tụt tạm thời rồi hồi lại"]
+    Reconcile -->|"TH2: Hiệu chỉnh mệnh giá cùng số tờ >= 2\nN_new == N_credited >= 2 & N_lastActive == N_new\ntrong DENOMINATION_REFINEMENT_WINDOW_MS (1500ms)"| CaseRefine["[ACTION: HIỆU CHỈNH TẠI CHỖ (IN-PLACE RECONCILE)]\npresentationCreditedCounts = clone(newCounts)\n(Ví dụ: {100k:1, 20k:1} -> {100k:1, 50k:1} = 150k, 2 tờ)"]
+    Reconcile -->|"TH3: Mở rộng đỉnh (1 -> 2 tờ hoặc lia A -> B)"| CaseExpand["[ACTION: CẬP NHẬT ĐỈNH MỆNH GIÁ]\ncredited[d] = max(credited[d], newCounts[d])\nChỉ cộng đúng phần chênh lệch mở rộng!"]
 
     NewPres --> CalcTotal["Tổng Ví chuẩn xác:\nW_total[d] = baselineCounts[d] + presentationCreditedCounts[d]"]
     CaseSubset --> CalcTotal
@@ -208,9 +208,9 @@ Mã nguồn: [`src/services/camera/SmartTorchController.ts`](file:///c:/Users/AD
 
 ### 4.1. Hai Bài Toán Quang Học Đối Nghịch Trên Thực Địa
 
-1. **Hiện tượng Tự kích Quang học khi Đèn đang BẬT (`Optical Feedback Strobe Loop` — Ticket 08)**:
+1. **Hiện tượng Tự kích Quang học khi Đèn đang BẬT (`Optical Feedback Strobe Loop`)**:
    - Khi đứng trong phòng tối (`< 25 lux` trong `1000ms`), đèn Flash tự động bật. Ngay khi đưa tờ tiền Polymer lại gần ống kính (5–20 cm), ánh sáng từ đèn LED Flash phản xạ ngược vào cảm biến camera làm `avgLuma` vọt từ `15 lux` lên `180–245 lux`. Nếu bộ điều khiển chỉ so sánh `avgLuma >= 60 lux` để tắt đèn, đèn sẽ chớp tắt liên tục (Strobe Loop).
-2. **Hiện tượng Khóa chết Cờ Tắt thủ công khi Người dùng Nhấn đúp Tắt đèn rồi Chạy vào Vùng tối lại (`Manual-OFF Lockout` — Ticket 12)**:
+2. **Hiện tượng Khóa chết Cờ Tắt thủ công khi Người dùng Nhấn đúp Tắt đèn rồi Chạy vào Vùng tối lại (`Manual-OFF Lockout`)**:
    - Khi Auto-Torch đã bật, nếu người dùng nhấn đúp 2 lần để tắt đèn thủ công (`isManualOverride = true`), sau đó đi qua hành lang trong nhà (`35–58 lux`, cảm biến mặt trước `< 85 lux`) hoặc chạy thẳng sang một góc tối khác (`< 25 lux`), điều kiện cũ đòi hỏi `avgLuma >= 60 lux && ambientSensorLux >= 85 lux` sẽ không bao giờ thỏa mãn, làm đèn không thể tự bật lại.
    - Ngược lại, nếu vừa tắt đèn ở chỗ tối mà mở khóa lại ngay lập tức khi người dùng vẫn đang đứng yên ở đúng chỗ đó, đèn sẽ tự bật lại sau 1 giây trái ý muốn tắt đèn của người dùng.
 
@@ -222,39 +222,39 @@ flowchart TD
 
     CheckState -->|"Đang TẮT"| CheckManualOff{"Đang giữ cờ Tắt thủ công?\n(isManualOverride == true)"}
 
-    CheckManualOff -->|"Có (Ticket 12)"| SettleCheck{"Đã qua cửa sổ xả frame Flash?\n(elapsed >= MANUAL_OFF_SETTLE_MS = 250ms)"}
+    CheckManualOff -->|"Có (Đã nhấn đúp tắt thủ công)"| SettleCheck{"Đã qua cửa sổ xả frame Flash?\n(elapsed >= MANUAL_OFF_SETTLE_MS = 250ms)"}
     SettleCheck -->|"Chưa (< 250ms)"| NoOpSettle["Bỏ qua 1–3 frame dư sáng LED trong ống kính\nGiữ nguyên isManualOverride = true"]
     SettleCheck -->|"Đã qua (>= 250ms)"| PathACheck{"Nhánh A: Qua vùng không tối?\n(avgLuma >= 35.0 lux & !hasSpatialReflection)\n(Không cần cảm biến mặt trước >= 85 lux!)"}
-    PathACheck -->|"Đúng"| ClearOverrideA["🔓 MỞ KHÓA NHÁNH A\nisManualOverride = false\nReset manualOffTimestamp & baseline"]
+    PathACheck -->|"Đúng"| ClearOverrideA["[MỞ KHÓA NHÁNH A]\nisManualOverride = false\nReset manualOffTimestamp & baseline"]
     PathACheck -->|"Sai (Đang ở vùng tối < 35 lux)"| LatchMotion["Nhánh B: Ghi nhận Mốc nền & Chốt dịch chuyển\n• Lưu manualOffBaselineLuma (sau 250ms)\n• Sau 400ms (bỏ qua rung ngón tay chạm đúp):\n  Nếu motionDeltaY >= 4.5 HOẶC accelDelta >= 0.35 m/s²\n  HOẶC (baseline - avgLuma) >= 6.0 lux\n  -> Bật chốt hasMovedSinceManualOff = true!"]
     LatchMotion --> GraceCheck{"Đã đủ thời gian đệm >= 2500ms\nVÀ hasMovedSinceManualOff == true?"}
     GraceCheck -->|"Chưa đủ 2.5s hoặc Đứng yên tại chỗ"| KeepManualOff["Giữ TẮT theo ý người dùng\n(isManualOverride = true)"]
-    GraceCheck -->|"Đủ >= 2.5s & Đã di chuyển/tối sâu hơn"| ClearOverrideB["🔓 MỞ KHÓA NHÁNH B\nisManualOverride = false\nKhởi tạo lowLightStartTime = now"]
+    GraceCheck -->|"Đủ >= 2.5s & Đã di chuyển/tối sâu hơn"| ClearOverrideB["[MỞ KHÓA NHÁNH B]\nisManualOverride = false\nKhởi tạo lowLightStartTime = now"]
 
     CheckManualOff -->|"Không"| TurnOnCheck{"avgLuma < 25 lux\nliên tục >= 1000ms?\n& !isManualOverride\n& !isOscillationLatched"}
     ClearOverrideA --> TurnOnCheck
     ClearOverrideB --> TurnOnCheck
-    TurnOnCheck -->|"Đúng"| ActionOn["🔥 BẬT ĐÈN TỰ ĐỘNG (TURN_ON)\n• Lưu preTorchAmbientSensorLux\n• Mở cửa sổ 450ms–1000ms đo postTorchBaselineLuma"]
+    TurnOnCheck -->|"Đúng"| ActionOn["[BẬT ĐÈN TỰ ĐỘNG: TURN_ON]\n• Lưu preTorchAmbientSensorLux\n• Mở cửa sổ 450ms–1000ms đo postTorchBaselineLuma"]
     TurnOnCheck -->|"Sai"| NoOp1["Giữ nguyên TẮT (NO_OP)"]
 
     CheckState -->|"Đang BẬT"| L4_Manual{"Lớp 4A: Người dùng bật thủ công?\n(isManualOverride == true)"}
-    L4_Manual -->|"Có"| HoldManual["🔒 GIỮ SÁNG TUYỆT ĐỐI\n(GUARD: MANUAL_OVERRIDE_LOCK)"]
+    L4_Manual -->|"Có"| HoldManual["[GIỮ SÁNG TUYỆT ĐỐI]\n(GUARD: MANUAL_OVERRIDE_LOCK)"]
 
     L4_Manual -->|"Không (Auto-Torch)"| L4_Latch{"Lớp 4B: Đang khóa chống dao động?\n(isOscillationLatched == true trong 60s)"}
-    L4_Latch -->|"Có"| HoldLatch["🔒 GIỮ SÁNG 60 GIÂY\n(GUARD: OSCILLATION_LATCH_HOLD)"]
+    L4_Latch -->|"Có"| HoldLatch["[GIỮ SÁNG 60 GIÂY]\n(GUARD: OSCILLATION_LATCH_HOLD)"]
 
     L4_Latch -->|"Không"| L3_Detect{"Lớp 3A: Đang có tờ tiền trong khung?\n(hasActiveDetection == true)"}
-    L3_Detect -->|"Có"| HoldDetect["🔒 KHÓA ĐÈN KHI ĐANG QUÉT TIỀN\n(GUARD: ACTIVE_DETECTION_LOCK)"]
+    L3_Detect -->|"Có"| HoldDetect["[KHÓA ĐÈN KHI ĐANG QUÉT TIỀN]\n(GUARD: ACTIVE_DETECTION_LOCK)"]
 
     L3_Detect -->|"Không"| L2_Glare{"Lớp 1 & 2: Kiểm tra Phản xạ Cận cảnh & Cảm biến Phòng\n1. glareRatio >= 0.08 hoặc centerToBorderRatio >= 1.30?\n2. Sensor.TYPE_LIGHT mặt trước vẫn < 85 lux?\n3. avgLuma < max(175, min(225, postTorchBaselineLuma + 55))?"}
-    L2_Glare -->|"Vi phạm bất kỳ điều kiện nào\n(Đây là ánh sáng tự phản xạ!)"| HoldReflect["🛡️ CHẶN TẮT ĐÈN DO PHẢN XẠ\n(GUARD: REFLECTION_GUARD_HOLD)"]
+    L2_Glare -->|"Vi phạm bất kỳ điều kiện nào\n(Đây là ánh sáng tự phản xạ!)"| HoldReflect["[CHẶN TẮT ĐÈN DO PHẢN XẠ]\n(GUARD: REFLECTION_GUARD_HOLD)"]
 
     L2_Glare -->|"Thỏa mãn cả 3\n(Ánh sáng phòng thực sự đã sáng)"| L3_MinHold{"Lớp 3B: Đã giữ sáng đủ >= 12.000ms\nVÀ duy trì sáng ổn định >= 3.000ms?"}
-    L3_MinHold -->|"Chưa đủ 12s hoặc < 3s"| HoldTime["⏳ ĐỢI ĐỦ THỜI GIAN GIỮ ĐÈN\n(GUARD: MIN_HOLD_COOLDOWN)"]
-    L3_MinHold -->|"Đã đủ >= 12s & >= 3s"| ActionOff["🌑 TẮT ĐÈN TỰ ĐỘNG (TURN_OFF)\nGhi nhận chu kỳ vào cửa sổ 30s\n(Nếu >= 2 chu kỳ/30s -> Kích hoạt Latch 60s)"]
+    L3_MinHold -->|"Chưa đủ 12s hoặc < 3s"| HoldTime["[ĐỢI ĐỦ THỜI GIAN GIỮ ĐÈN]\n(GUARD: MIN_HOLD_COOLDOWN)"]
+    L3_MinHold -->|"Đã đủ >= 12s & >= 3s"| ActionOff["[TẮT ĐÈN TỰ ĐỘNG: TURN_OFF]\nGhi nhận chu kỳ vào cửa sổ 30s\n(Nếu >= 2 chu kỳ/30s -> Kích hoạt Latch 60s)"]
 ```
 
-### 4.3. Máy Trạng Thái Chi Tiết Của Chốt Hành Trình `hasMovedSinceManualOff` (`Ticket 12`)
+### 4.3. Máy Trạng Thái Chi Tiết Của Chốt Hành Trình `hasMovedSinceManualOff` (`Relocation Latch`)
 
 Tại sao phải dùng chốt trạng thái **`hasMovedSinceManualOff`** thay vì chỉ kiểm tra chuyển động tại thời điểm $t \ge 2500\text{ms}$?
 - Trong thực tế, sau khi nhấn đúp tắt đèn ở $t = 0\text{ms}$, người dùng thường bước đi/chạy sang góc tối mới trong khoảng $t \in [600\text{ms}, 2000\text{ms}]$, sau đó **đứng yên lại** ở $t = 2000\text{ms}$ để giơ tờ tiền lên quét.
@@ -263,12 +263,12 @@ Tại sao phải dùng chốt trạng thái **`hasMovedSinceManualOff`** thay v�
 ```mermaid
 stateDiagram-v2
     [*] --> AUTO_ARMED
-    AUTO_ARMED: 🟢 AUTO_ARMED\nisManualOverride = false, isTorchOn = false\nSẵn sàng tự bật đèn nếu < 25 lux trong 1.0s
-    TORCH_ON_AUTO: 🔥 TORCH_ON_AUTO\nisTorchOn = true, isManualOverride = false\nBảo vệ bởi 4 lớp Anti-Strobe
-    SETTLE_DRAIN: ⏳ MANUAL_OFF_SETTLING (0..250ms)\nisManualOverride = true, isTorchOn = false\nXả 1–3 frame dư sáng LED trong ImageReader FIFO
-    TAP_JITTER_GUARD: 🛡️ TAP_JITTER_GUARD (250..400ms)\nGhi nhận manualOffBaselineLuma\nBỏ qua xung rung ngón tay khi vừa chạm đúp
-    DARK_STATIONARY: 🌑 DARK_STATIONARY (> 400ms)\nhasMovedSinceManualOff = false\nĐứng yên tại chỗ -> Giữ TẮT vô thời hạn
-    DARK_MOVED_LATCHED: 🏃 DARK_MOVED_LATCHED (> 400ms)\nhasMovedSinceManualOff = true\n(Đã bước đi ΔY>=4.5 / Δa>=0.35 hoặc tối sâu hơn >=6 lux)
+    AUTO_ARMED: [AUTO_ARMED]\nisManualOverride = false, isTorchOn = false\nSẵn sàng tự bật đèn nếu < 25 lux trong 1.0s
+    TORCH_ON_AUTO: [TORCH_ON_AUTO]\nisTorchOn = true, isManualOverride = false\nBảo vệ bởi 4 lớp Anti-Strobe
+    SETTLE_DRAIN: [MANUAL_OFF_SETTLING] (0..250ms)\nisManualOverride = true, isTorchOn = false\nXả 1–3 frame dư sáng LED trong ImageReader FIFO
+    TAP_JITTER_GUARD: [TAP_JITTER_GUARD] (250..400ms)\nGhi nhận manualOffBaselineLuma\nBỏ qua xung rung ngón tay khi vừa chạm đúp
+    DARK_STATIONARY: [DARK_STATIONARY] (> 400ms)\nhasMovedSinceManualOff = false\nĐứng yên tại chỗ -> Giữ TẮT vô thời hạn
+    DARK_MOVED_LATCHED: [DARK_MOVED_LATCHED] (> 400ms)\nhasMovedSinceManualOff = true\n(Đã bước đi ΔY>=4.5 / Δa>=0.35 hoặc tối sâu hơn >=6 lux)
 
     AUTO_ARMED --> TORCH_ON_AUTO: < 25 lux liên tục >= 1000ms
     TORCH_ON_AUTO --> SETTLE_DRAIN: Người dùng Nhấn đúp Tắt đèn\n(handleManualToggle(false, now))
@@ -292,9 +292,9 @@ Mã nguồn: [`src/services/camera/AdaptivePowerGovernor.ts`](file:///c:/Users/A
 ```mermaid
 stateDiagram-v2
     [*] --> BURST
-    BURST: 🔥 BURST (Quét Chủ Động)\n• Chu kỳ TFLite: 130ms (~7.7 FPS)\n• Camera2 AE FPS: [15, 24]\n• Preview Alpha: 0.22\n• EdgePulseBorder: Nhịp thở 60 FPS
-    ECO: 🌿 ECO (Tiết Kiệm Khi Giữ Yên)\n• Chu kỳ TFLite: 650ms (~1.5 FPS)\n• Camera2 AE FPS: [10, 15]\n• Preview Alpha: 0.08\n• EdgePulseBorder: Tạm dừng loop (opacity = 0.85)
-    HIBERNATION: 💤 HIBERNATION (Ngủ Đông Sâu)\n• TFLite: 0 FPS (Tạm ngưng hoàn toàn)\n• Camera2: stopRepeating() + Nhịp tim 1500ms/3000ms\n• Preview Alpha: 0.00 (True OLED Black)\n• Độ sáng màn hình: 0.01f (Tự gỡ KEEP_SCREEN_ON sau 180s)\n• Cầu chì nhiệt: Tự tắt Auto-Torch sau 15s tĩnh / 4s bỏ túi
+    BURST: [BURST] (Quét Chủ Động)\n• Chu kỳ TFLite: 130ms (~7.7 FPS)\n• Camera2 AE FPS: [15, 24]\n• Preview Alpha: 0.22\n• EdgePulseBorder: Nhịp thở 60 FPS
+    ECO: [ECO] (Tiết Kiệm Khi Giữ Yên)\n• Chu kỳ TFLite: 650ms (~1.5 FPS)\n• Camera2 AE FPS: [10, 15]\n• Preview Alpha: 0.08\n• EdgePulseBorder: Tạm dừng loop (opacity = 0.85)
+    HIBERNATION: [HIBERNATION] (Ngủ Đông Sâu)\n• TFLite: 0 FPS (Tạm ngưng hoàn toàn)\n• Camera2: stopRepeating() + Nhịp tim 1500ms/3000ms\n• Preview Alpha: 0.00 (True OLED Black)\n• Độ sáng màn hình: 0.01f (Tự gỡ KEEP_SCREEN_ON sau 180s)\n• Cầu chì nhiệt: Tự tắt Auto-Torch sau 15s tĩnh / 4s bỏ túi
 
     BURST --> ECO: Đã khóa tiền & Giữ yên (ΔY < 2.5) >= 2.5s\nHOẶC Khung hình trống tĩnh (ΔY < 2.0) >= 2.5s
     ECO --> BURST: Chuyển động quang học (ΔY >= 4.5)\nHOẶC Rung IMU cầm máy lên (Δa >= 0.35 m/s²)\nHOẶC Có bóng tờ tiền / Rút tiền / Chạm màn hình
@@ -305,14 +305,25 @@ stateDiagram-v2
 ### 5.2. Hợp Nhất Phân Tích Kênh Y Trong 1 Vòng Lặp (`analyzeYPlaneSinglePass`) & Cổng Chặn Nhòe (`MOTION_BLUR_GATE`)
 
 Thay vì quét mặt phẳng Y nhiều lần, hàm [`analyzeYPlaneSinglePass`](file:///c:/Users/ADMIN/NCKH/App_android/src/services/camera/LuminanceAnalyzer.ts) thực hiện duy nhất **1 vòng lặp lấy mẫu thưa** (`< 0.04ms` CPU) để tính đồng thời:
-1. Độ sáng trung bình `averageLuma`, độ sáng tâm `centerLuma`, độ sáng viền `borderLuma`, và tỷ lệ điểm chói `glareRatio` cho Ticket 08 & Ticket 12.
+1. Độ sáng trung bình `averageLuma`, độ sáng tâm `centerLuma`, độ sáng viền `borderLuma`, và tỷ lệ điểm chói `glareRatio` cho bộ điều khiển Đèn Flash chống chớp tắt và khôi phục tắt thủ công.
 2. **Lưới độ sáng $16 \times 16 = 256$ ô (`lumaGrid`)** và độ lệch chuyển động trung bình so với frame trước:
    $$\Delta Y = \frac{1}{256} \sum_{k=0}^{255} \left| G_t[k] - G_{t-1}[k] \right|$$
 3. **Cổng Chặn Nhòe Chuyển Động (`MOTION_BLUR_GATE`, $\Delta Y > 32.0$)**:
    - Khi người dùng đang vẩy tay hoặc lia máy quá nhanh ($\Delta Y > 32.0$), hình ảnh bị nhòe nặng (motion blur).
    - Bộ điều tốc giữ hệ thống ở trạng thái `BURST` nhưng **đặt `shouldRunInference = false` cho frame nhòe đó** và **không đẩy frame rỗng giả vào `TemporalDebounceFilter`**, giúp tiết kiệm 100% chu kỳ CPU/NPU vô ích mà không làm rơi mất trạng thái tiền đã khóa trong cửa sổ 5 frame!
 
-### 5.3. Đánh Thức Đa Cảm Biến Không Cần Quyền & Bộ Lọc Chống Rung Mặt Bàn (`0.35 -> 0.65 m/s²`)
+### 5.3. Tối Ưu Hóa Chế Độ Eco Mode: Bộ Trễ Vùng Đệm 350ms, Chống Rung Bàn Tay & Chặn Mất Frame Âm Tính Giả
+
+Nhằm đảm bảo chế độ `ECO` hoạt động ổn định trên thiết bị cầm tay thực tế mà không bị thoát giả về `BURST` bởi các xung nhiễu vi mô:
+1. **Bộ trễ vùng đệm chống dao động Eco Mode (`Eco Mode Deadband Hysteresis 350ms`)**:
+   - Khi đang ở `ECO`, nếu biên độ chuyển động quang học nằm trong vùng đệm giữa tĩnh và vung tay chủ động (`STATIC_HOLDING_DELTA_Y_THRESHOLD < motionDeltaY < MOTION_WAKE_DELTA_Y_THRESHOLD = 4.5`), `AdaptivePowerGovernor` khởi động đồng hồ đệm `ecoMotionSpikeStartMs`.
+   - Chuyển động phải duy trì liên tục tối thiểu **`350ms`** mới cho phép thoát `ECO` về `BURST`. Các rung động giật ngón tay hoặc dịch chuyển nhẹ $< 350\text{ms}$ sẽ bị hấp thụ hoàn toàn. Những chuyển động chủ động biên độ lớn ($\Delta Y \ge 4.5$) tiếp tục đánh thức hệ thống về `BURST` ngay lập tức trong 1 frame ($< 15\text{ms}$).
+2. **Bộ lọc rung lắc bàn tay người khiếm thị (`Hand-Tremor IMU Filter 0.65 m/s²`)**:
+   - Trong `MoneyCameraView.kt`, khi tiền đã được xác nhận ổn định (`hasConfirmedMoney == true`), ngưỡng gia tốc IMU để đánh thức máy được nâng từ `0.35 m/s²` lên **`0.65 m/s²`** (`IMU_WAKE_DELTA_A_TABLE`). Cơ chế này loại bỏ rung giật sinh lý tự nhiên của tay người dùng khi cầm tiền đứng yên trước ống kính, ngăn chặn triệt để hiện tượng vọt thoát `ECO` không mong muốn.
+3. **Bảo vệ chống mất frame âm tính giả của mô hình AI (`effectiveConsecutiveEmpty = 0`)**:
+   - Trong [`useMoneyState.ts`](file:///c:/Users/ADMIN/NCKH/App_android/src/hooks/useMoneyState.ts), khi trạng thái nhận diện đang ổn định (`STABLE`) và tiền đang được giữ yên trước camera (`motionDeltaY < STATIC_HOLDING_DELTA_Y_THRESHOLD`), nếu mô hình YOLO xuất hiện hiện tượng sụt 1 frame âm tính giả (False Negative Dropout), hệ thống truyền `effectiveConsecutiveEmpty = 0` vào bộ điều tốc thay vì nhận diện sai là người dùng đang rút tiền (`WITHDRAWAL_TRANSITION`), bảo toàn chế độ `ECO` tiết kiệm pin.
+
+### 5.4. Đánh Thức Đa Cảm Biến Không Cần Quyền & Bộ Lọc Chống Rung Mặt Bàn (`0.35 -> 0.65 m/s²`)
 
 Khi ở trạng thái `HIBERNATION`, luồng bơm frame liên tục của Camera2 được dừng hẳn bằng `captureSession.stopRepeating()` để giải phóng hoàn toàn ISP (Image Signal Processor). Để đánh thức máy tức thì ngay khi người dùng vừa nhấc máy lên mà không cần đợi chu kỳ nhịp tim `1500ms`:
 - Hệ thống lắng nghe 3 cảm biến phần cứng **Zero-Permission** (không cần khai báo quyền trong `AndroidManifest.xml`): `Sensor.TYPE_LINEAR_ACCELERATION` (hoặc `TYPE_ACCELEROMETER`), `Sensor.TYPE_PROXIMITY`, và `Sensor.TYPE_LIGHT`.
@@ -320,7 +331,7 @@ Khi ở trạng thái `HIBERNATION`, luồng bơm frame liên tục của Camera
    - Ngưỡng đánh thức mặc định của cảm biến gia tốc là $\Delta a \ge 0.35\text{ m/s}^2$.
    - Nếu điện thoại đặt trên mặt bàn có quạt máy hoặc trên xe đang nổ máy gây rung nhẹ ($\Delta a \approx 0.40\text{–}0.50\text{ m/s}^2$) làm máy thức dậy 3 lần liên tiếp mà không hề có biến thiên hình ảnh quang học ($\Delta Y < 1.2$), `AdaptivePowerGovernor` sẽ tự động nâng ngưỡng đánh thức IMU lên **`0.65 m/s²`** (`IMU_WAKE_DELTA_A_ADAPTIVE_TABLE`), chặn đứng hoàn toàn việc thức dậy giả do rung bàn! Ngay khi người dùng cầm máy lên thật ($\Delta Y \ge 4.5$), ngưỡng tự động trở về `0.35 m/s²`.
 
-### 5.4. Bảng Điều Tiết Chu Kỳ Theo Nhiệt Độ & Mức Pin Thực Tế (Android 9–14 / API 28–34)
+### 5.5. Bảng Điều Tiết Chu Kỳ Theo Nhiệt Độ & Mức Pin Thực Tế (Android 9–14 / API 28–34)
 
 Hệ thống kết hợp `PowerManager.getCurrentThermalStatus()` (API 29+) và `BatteryManager.EXTRA_TEMPERATURE` / `EXTRA_LEVEL` / `isPowerSaveMode()` (hỗ trợ đầy đủ từ Android 9.0 API 28):
 
@@ -332,7 +343,7 @@ Hệ thống kết hợp `PowerManager.getCurrentThermalStatus()` (API 29+) và 
 
 ---
 
-## 6. Phân Hệ 5: Hệ Thống Âm Thanh Tiếng Việt Offline, Ngắt Nâng Cấp Đa Tờ & Khóa Bảo Vệ Đọc Ví (`SmartPreemptionController` — Ticket 13)
+## 6. Phân Hệ 5: Hệ Thống Âm Thanh Tiếng Việt Offline, Ngắt Nâng Cấp Đa Tờ & Khóa Bảo Vệ Đọc Ví (`SmartPreemptionController`)
 
 Mã nguồn: [`src/services/audio/audioRegistry.ts`](file:///c:/Users/ADMIN/NCKH/App_android/src/services/audio/audioRegistry.ts), [`AudioQueueManager.ts`](file:///c:/Users/ADMIN/NCKH/App_android/src/services/audio/AudioQueueManager.ts), [`SmartPreemptionController.ts`](file:///c:/Users/ADMIN/NCKH/App_android/src/services/audio/SmartPreemptionController.ts), [`MoneyAudioModule.kt`](file:///c:/Users/ADMIN/NCKH/App_android/android/app/src/main/java/com/nckh/moneyvision/audio/MoneyAudioModule.kt) và `MoneyAudioModule.java`.
 
@@ -354,31 +365,31 @@ flowchart TD
     Event["Sự kiện Cập nhật Trạng thái Tiền Ổn định\nhandleDetectionUpdate(items, now)"] --> CheckWalletLock{"Đang đọc tổng kết Ví tích lũy?\n(isReadingWallet == true)"}
 
     CheckWalletLock -->|"Đúng (Đang phát câu đọc Ví)"| WalletProtect{"items có tiền hay trống?"}
-    WalletProtect -->|"Trống (Người dùng hạ tay cầm tiền\nxuống khi đang nghe đọc Ví)"| SilentEmptyState["🛡️ KHÓA BẢO VỆ CÂU ĐỌC VÍ\nCập nhật hadMoneyInLastFrame = false,\nlastAnnouncedSignature = 'EMPTY'\nTUYỆT ĐỐI KHÔNG gọi stop() & KHÔNG phát empty.wav!"]
-    WalletProtect -->|"Có tiền"| SavePendingWallet["🛡️ KHÓA BẢO VỆ CÂU ĐỌC VÍ\nLưu pendingDetection = activeItems\nTUYỆT ĐỐI KHÔNG ngắt câu đọc Ví đang phát!"]
+    WalletProtect -->|"Trống (Người dùng hạ tay cầm tiền\nxuống khi đang nghe đọc Ví)"| SilentEmptyState["[KHÓA BẢO VỆ CÂU ĐỌC VÍ]\nCập nhật hadMoneyInLastFrame = false,\nlastAnnouncedSignature = 'EMPTY'\nTUYỆT ĐỐI KHÔNG gọi stop() & KHÔNG phát empty.wav!"]
+    WalletProtect -->|"Có tiền"| SavePendingWallet["[KHÓA BẢO VỆ CÂU ĐỌC VÍ]\nLưu pendingDetection = activeItems\nTUYỆT ĐỐI KHÔNG ngắt câu đọc Ví đang phát!"]
 
     CheckWalletLock -->|"Sai (Chế độ quét bình thường)"| IsEmpty{"Khung hình Trống?\n(items.length == 0)"}
 
     IsEmpty -->|"Có (Người dùng vừa rút tiền ra)"| HadMoney{"Frame trước đó có tiền\nhoặc đang đọc dở câu tiền?"}
     HadMoney -->|"Không"| IgnoreEmpty["Bỏ qua (Không phát lặp empty.wav)"]
-    HadMoney -->|"Có"| HardStop["🛑 NGẮT TỨC THÌ KHI RÚT TIỀN (HARD PREEMPTION)\n1. Xóa pendingDetection = null, currentlyAnnouncingNotesCount = 0\n2. queueManager.stop() (Dừng ngay câu đang đọc dở)\n3. Rung ngắn 50ms + Phát ngay âm hiệu 'empty.wav'"]
+    HadMoney -->|"Có"| HardStop["[NGẮT TỨC THÌ KHI RÚT TIỀN: HARD PREEMPTION]\n1. Xóa pendingDetection = null, currentlyAnnouncingNotesCount = 0\n2. queueManager.stop() (Dừng ngay câu đang đọc dở)\n3. Rung ngắn 50ms + Phát ngay âm hiệu 'empty.wav'"]
 
     IsEmpty -->|"Không (Đang có tiền M_new)"| SameSig{"M_new == M_lastAnnounced\nhoặc là Tập con tụt tạm thời của Đỉnh đã đọc?\n(Ví dụ: {50k: 2} -> {50k: 1} -> {50k: 2})"}
-    SameSig -->|"Đúng"| Suppress["🤫 CHẶN ĐỌC LẶP & IM LẶNG KHI TỤT TỜ TẠM THỜI\nKhông phát câu 1 tờ khi bị che khuất tạm thời\nvà không đọc lặp câu 2 tờ khi tờ thứ 2 hiện lại!"]
+    SameSig -->|"Đúng"| Suppress["[CHẶN ĐỌC LẶP & IM LẶNG KHI TỤT TỜ TẠM THỜI]\nKhông phát câu 1 tờ khi bị che khuất tạm thời\nvà không đọc lặp câu 2 tờ khi tờ thứ 2 hiện lại!"]
 
     SameSig -->|"Sai (Trạng thái tiền mới)"| SpeakingCheck{"Hiện đang đọc dở câu trước đó?\n(isSpeaking() == true)"}
 
     SpeakingCheck -->|"Đang đọc dở"| UpgradeCheck{"Số lượng tờ tiền TĂNG LÊN?\n(newTotalNotes > currentlyAnnouncingNotesCount)\nVí dụ: Đang đọc 1 tờ -> Phát hiện tờ thứ 2"}
-    UpgradeCheck -->|"Đúng (Nâng cấp 1 -> 2+ tờ)"| UpgradePreempt["⚡ NGẮT NÂNG CẤP ĐA TỜ TỨC THÌ (UPGRADE PREEMPTION)\n1. queueManager.stop() (Dừng ngay câu 1 tờ đã lỗi thời)\n2. Cập nhật currentlyAnnouncingNotesCount = newTotalNotes\n3. Phát ngay câu tổng hợp đa tờ ('Hai tờ ...')!"]
-    UpgradeCheck -->|"Sai (Cùng số tờ / Đổi tờ đơn)"| QueueLatest["📥 GỘP TRẠNG THÁI MỚI NHẤT (SOFT PREEMPTION)\nGán pendingDetection = activeItems\nĐợi câu hiện tại đọc dứt chữ cuối -> Phát ngay pendingDetection!"]
+    UpgradeCheck -->|"Đúng (Nâng cấp 1 -> 2+ tờ)"| UpgradePreempt["[NGẮT NÂNG CẤP ĐA TỜ TỨC THÌ: UPGRADE PREEMPTION]\n1. queueManager.stop() (Dừng ngay câu 1 tờ đã lỗi thời)\n2. Cập nhật currentlyAnnouncingNotesCount = newTotalNotes\n3. Phát ngay câu tổng hợp đa tờ ('Hai tờ ...')!"]
+    UpgradeCheck -->|"Sai (Cùng số tờ / Đổi tờ đơn)"| QueueLatest["[GỘP TRẠNG THÁI MỚI NHẤT: SOFT PREEMPTION]\nGán pendingDetection = activeItems\nĐợi câu hiện tại đọc dứt chữ cuối -> Phát ngay pendingDetection!"]
 
-    SpeakingCheck -->|"Đang rảnh"| PlayNow["🔊 PHÁT NGAY LẬP TỨC\n1. Ghi nhận presentationPeakAnnouncedCounts & currentlyAnnouncingNotesCount\n2. Phát mã rung mệnh giá lớn nhất + Chuỗi ['tick', ...clips]"]
+    SpeakingCheck -->|"Đang rảnh"| PlayNow["[PHÁT NGAY LẬP TỨC]\n1. Ghi nhận presentationPeakAnnouncedCounts & currentlyAnnouncingNotesCount\n2. Phát mã rung mệnh giá lớn nhất + Chuỗi ['tick', ...clips]"]
 ```
 
-### 6.3. Ba Cơ Chế Bảo Vệ Trải Nghiệm Âm Thanh Thực Tế (`Ticket 13`)
+### 6.3. Ba Cơ Chế Bảo Vệ Trải Nghiệm Âm Thanh Thực Tế
 
 1. **Khóa Bảo Vệ Tuyệt Đối Giọng Đọc Ví (`isReadingWallet` Protection Lock)**:
-   - Khi người khiếm thị nhấn giữ 1 giây (`handleLongPress`) hoặc bấm nút **`👛 VÍ TÍCH LŨY`** để nghe tổng tiền trong ví, phản xạ tự nhiên của họ là **hạ tay đang cầm tiền xuống** để lắng nghe.
+   - Khi người khiếm thị nhấn giữ 1 giây (`handleLongPress`) hoặc bấm nút **`[VÍ TÍCH LŨY]`** để nghe tổng tiền trong ví, phản xạ tự nhiên của họ là **hạ tay đang cầm tiền xuống** để lắng nghe.
    - Hành động hạ tay làm camera thấy `EMPTY` sau 3 frame (`~390ms`). Nhờ cờ `isReadingWallet = true` được duy trì xuyên suốt chuỗi phát âm thanh Ví (`try / finally` trong TypeScript và `CompletionCallback` của `audioModule.playSequence` trong `MainActivity.java`), luồng camera chỉ cập nhật biến trạng thái nền mà **tuyệt đối không gọi `stop()` và không phát tiếng `empty.wav`**, giúp câu đọc tổng Ví luôn được phát trọn vẹn từ đầu đến cuối.
 2. **Ngắt Nâng Cấp Đa Tờ Tức Thì (`Multi-Note Upgrade Preemption`)**:
    - Khi cầm 2 tờ `50.000đ`, nếu tờ thứ nhất hội tụ trước (`t = 0.5s`) và bắt đầu đọc *"Năm mươi nghìn"*, rồi chỉ `200ms` sau tờ thứ hai hội tụ (`newTotalNotes = 2 > currentlyAnnouncingNotesCount = 1`), bộ điều khiển sẽ **ngắt ngay câu 1 tờ đang đọc dở** để phát ngay câu *"Hai tờ năm mươi nghìn"*. Nhờ đó người khiếm thị không phải nghe 2 câu rời rạc (*"Năm mươi nghìn"* rồi *"Hai tờ năm mươi nghìn"*) dễ gây hiểu lầm là vừa quét 3 tờ (`150.000đ`).
