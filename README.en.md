@@ -1,6 +1,6 @@
 # MoneyVision — 100% Offline Assistive AI Application for Vietnamese Banknote Recognition for the Visually Impaired
 
-**Language / Ngôn ngữ:** [Tiếng Việt (README.md)](README.md) | **English (Current)**
+**Language / Ngôn ngữ:** [Tiếng Việt](README.md) | **English (Current)**
 
 - **Author & Independent Owner:** Nguyễn Quang Toàn (`Nguyễn Quang Toàn - Chủ sở hữu & Phát triển độc lập` / Independent Owner & Developer)
 - **Copyright:** `© 2026 Nguyễn Quang Toàn - Sở hữu & Phát triển độc lập` (All Rights Reserved)
