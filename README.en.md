@@ -172,7 +172,7 @@ npx react-native run-android
 
 ### 5.3. Building the Universal Release APK
 
-Compile the production Universal APK (supporting both 32-bit `armeabi-v7a` and 64-bit `arm64-v8a` with v1+v2+v3 signatures):
+Compile the production Universal APK (supporting both 32-bit `armeabi-v7a` and 64-bit `arm64-v8a`):
 
 ```bash
 cd android
