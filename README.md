@@ -172,7 +172,7 @@ npx react-native run-android
 
 ### 5.3. Biên Dịch Bản Phát Hành Universal APK (Release Build)
 
-Biên dịch gói APK Universal hoàn chỉnh (hỗ trợ cả 32-bit `armeabi-v7a` và 64-bit `arm64-v8a` kèm chữ ký số v1+v2+v3):
+Biên dịch gói APK Universal hoàn chỉnh (hỗ trợ cả 32-bit `armeabi-v7a` và 64-bit `arm64-v8a`):
 
 ```bash
 cd android
