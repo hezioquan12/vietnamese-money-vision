@@ -1,6 +1,6 @@
 # MoneyVision — Ứng Dụng AI Trợ Năng Nhận Diện Tiền Việt Nam Đồng 100% Offline Cho Người Khiếm Thị
 
-**Ngôn ngữ / Language:** **Tiếng Việt (Hiện tại)** | [English (README.en.md)](README.en.md)
+**Ngôn ngữ / Language:** **Tiếng Việt (Hiện tại)** | [English](README.en.md)
 
 - **Tác giả & Chủ sở hữu độc lập:** Nguyễn Quang Toàn (`Nguyễn Quang Toàn - Chủ sở hữu & Phát triển độc lập`)
 - **Bản quyền:** `© 2026 Nguyễn Quang Toàn - Sở hữu & Phát triển độc lập` (All Rights Reserved)
